@@ -1,0 +1,2574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Dibujo Técnico - Vistas e Isométrico</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #e5e7eb;
+            color: #2c3e50;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            width: 95vw;
+            margin: 2rem auto;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: auto 24%;
+            gap: 0;
+            min-height: 600px;
+            background: #fdfdfd;
+            border: 1px solid #111827;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: visible;
+        }
+
+        .main-panel {
+            background: white;
+            border-radius: 0;
+            padding: 15px;
+            overflow-y: auto;
+            border-right: 1px solid #111827;
+        }
+
+        .drawing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            height: calc(100vh - 100px);
+            min-height: 600px;
+        }
+
+        .grid-cell {
+            border: 1px solid #111827;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            box-sizing: border-box;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .cell-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #374151;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            position: absolute;
+            top: 10px;
+        }
+
+        .grid-cell canvas {
+            display: block;
+            width: 92.5%;
+            height: 92.5%;
+        }
+
+        .preview-panel {
+            background: white;
+            border-radius: 0;
+            padding: 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .title-block-border {
+            border-bottom: 1px solid #111827;
+        }
+
+        .text-data-label {
+            font-size: 0.5rem;
+            font-weight: 500;
+            color: #4b5563;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        canvas {
+            border: 1px solid #d1d5db;
+            border-radius: 0;
+            background: #ffffff;
+            cursor: crosshair;
+            display: block;
+            margin: 10px auto;
+        }
+
+        .control-btn {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+            padding: 6px 10px;
+            border-radius: 0;
+            cursor: pointer;
+            font-size: 10px;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .control-btn:active {
+            background: #e5e7eb;
+        }
+
+        .control-btn.nav {
+            background: #f9fafb;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 0;
+            font-size: 9px;
+            font-weight: 700;
+            margin-left: 6px;
+            border: 1px solid;
+        }
+
+        .difficulty-easy {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #a7f3d0;
+        }
+
+        .difficulty-medium {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+
+        .difficulty-hard {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .difficulty-expert {
+            background: #dbeafe;
+            color: #1e40af;
+            border-color: #bfdbfe;
+        }
+
+        .preview-title {
+            color: #111827;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .piece-name {
+            text-align: center;
+            color: #111827;
+            font-weight: 600;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .feedback {
+            padding: 12px;
+            border-radius: 0;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 13px;
+            display: none;
+            border: 1px solid;
+        }
+
+        .feedback.success {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #a7f3d0;
+            display: block;
+        }
+
+        .feedback.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #fecaca;
+            display: block;
+        }
+
+        /* Utility classes for layout */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .flex-wrap { flex-wrap: wrap; }
+        .flex-shrink-0 { flex-shrink: 0; }
+        .flex-grow { flex-grow: 1; }
+        .justify-center { justify-content: center; }
+        .justify-around { justify-around: space-around; }
+        .items-center { align-items: center; }
+        .text-left { text-align: left; }
+        .text-center { text-align: center; }
+        .gap-1 { gap: 0.25rem; }
+        .mt-1 { margin-top: 0.25rem; }
+        .-mt-1 { margin-top: -0.25rem; }
+        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+        .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+        .p-2 { padding: 0.5rem; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .leading-none { line-height: 1; }
+        .tracking-tight { letter-spacing: -0.025em; }
+        .tracking-tighter { letter-spacing: -0.05em; }
+        .text-xs { font-size: 0.75rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-3xl { font-size: 1.875rem; }
+        .text-4xl { font-size: 2.25rem; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .font-extrabold { font-weight: 800; }
+        .font-black { font-weight: 900; }
+        .text-gray-300 { color: #d1d5db; }
+        .text-gray-700 { color: #374151; }
+        .text-gray-800 { color: #1f2937; }
+        .text-gray-900 { color: #111827; }
+        .bg-gray-900 { background-color: #111827; }
+        .text-white { color: white; }
+
+        /* Tablet breakpoint */
+        @media (max-width: 1024px) {
+            .game-area {
+                grid-template-columns: auto 30%;
+            }
+
+            .text-3xl {
+                font-size: 1.75rem;
+            }
+
+            .text-4xl {
+                font-size: 2rem;
+            }
+        }
+
+        /* Mobile breakpoint */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                margin: 1rem auto;
+                width: 100%;
+            }
+
+            .game-area {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto;
+                height: auto;
+                min-height: auto;
+            }
+
+            .main-panel {
+                border-right: none;
+                border-bottom: 1px solid #111827;
+                padding: 20px;
+            }
+
+            .preview-panel {
+                height: auto !important;
+            }
+
+            /* Adjust title block heights for mobile */
+            .preview-panel > div[style*="height: 9%"],
+            .preview-panel > div[style*="height: 6%"] {
+                height: auto !important;
+                min-height: 40px;
+            }
+
+            .preview-panel > div[style*="height: 18%"] {
+                height: auto !important;
+                min-height: 60px;
+            }
+
+            .preview-panel > div[style*="min-height: 34%"] {
+                height: auto !important;
+                min-height: auto !important;
+            }
+
+            .preview-panel > div[style*="height: 12%"] {
+                height: auto !important;
+                min-height: 60px;
+            }
+
+            canvas {
+                max-width: 100%;
+                height: auto;
+            }
+
+            .drawing-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto auto;
+                gap: 10px;
+                height: auto;
+                min-height: auto;
+            }
+
+            .grid-cell canvas {
+                width: 100% !important;
+                height: auto !important;
+            }
+
+            .text-3xl {
+                font-size: 1.25rem;
+            }
+
+            .text-4xl {
+                font-size: 1.75rem;
+            }
+
+            .text-lg {
+                font-size: 1rem;
+            }
+
+            .text-sm {
+                font-size: 0.8rem;
+            }
+
+            .control-btn {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+
+            .preview-title {
+                font-size: 12px;
+            }
+        }
+
+        /* Small mobile breakpoint */
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                margin: 0.5rem auto;
+            }
+
+            .main-panel {
+                padding: 15px;
+            }
+
+            .text-3xl {
+                font-size: 1.1rem;
+            }
+
+            .text-4xl {
+                font-size: 1.5rem;
+            }
+
+            .control-btn {
+                padding: 6px 10px;
+                font-size: 10px;
+            }
+
+            .difficulty-badge {
+                font-size: 8px;
+                padding: 2px 4px;
+            }
+        }
+
+        /* Hide regular interface when printing */
+        @media print {
+            .container {
+                display: none !important;
+            }
+        }
+
+        /* Print container - hidden by default */
+        #printContainer {
+            display: none;
+        }
+
+        /* Print styles for PDF generation - CORREGIDOS */
+        @media print {
+            @page {
+                size: 17in 11in landscape;
+                margin: 0.25in;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                background: white;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            #printContainer {
+                display: block !important;
+                width: 100%;
+                height: 100%;
+            }
+
+            .print-page {
+                width: 16.5in;
+                height: 10.5in;
+                page-break-after: always;
+                position: relative;
+                background: white;
+                display: grid;
+                grid-template-columns: 12.25in 4.25in;
+                gap: 0;
+                margin: 0 auto;
+                box-sizing: border-box;
+            }
+
+            .print-page:last-child {
+                page-break-after: auto;
+            }
+
+            .print-main {
+                width: 12.25in;
+                height: 10.5in;
+                padding: 0.1in;
+                border-right: 1px solid #111827;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+                gap: 0.1in;
+                box-sizing: border-box;
+            }
+
+            .print-grid-cell {
+                border: 1px solid #111827;
+                padding: 0.05in;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                background: white;
+                box-sizing: border-box;
+                overflow: hidden;
+                position: relative;
+            }
+
+            .print-grid-cell canvas {
+                display: block;
+                margin: 0 auto;
+                max-width: 100%;
+                max-height: 100%;
+                width: auto;
+                height: auto;
+            }
+
+            .print-cell-label {
+                font-size: 8pt;
+                font-weight: 700;
+                color: #111827;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 0.03in;
+                text-align: center;
+                width: 100%;
+            }
+
+            .print-title-block {
+                background: white;
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                box-sizing: border-box;
+            }
+
+            .print-title-block > div {
+                border-bottom: 1px solid #111827;
+                box-sizing: border-box;
+            }
+
+            .print-title-block .text-data-label {
+                font-size: 0.4rem;
+                font-weight: 500;
+                color: #4b5563;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+            }
+
+            .print-title-block .text-xs {
+                font-size: 0.6rem;
+            }
+
+            .print-title-block .text-sm {
+                font-size: 0.7rem;
+            }
+
+            canvas {
+                page-break-inside: avoid;
+            }
+
+            /* Ajustes específicos para las divisiones del title-block */
+            .print-title-block > div[style*="height: 9%"] {
+                height: 9% !important;
+                min-height: auto !important;
+                padding: 0.1in 0.2in !important;
+            }
+
+            .print-title-block > div[style*="height: 6%"] {
+                height: 6% !important;
+                min-height: auto !important;
+                padding: 0.05in 0.2in !important;
+            }
+
+            .print-title-block > div[style*="height: 18%"] {
+                height: 18% !important;
+                min-height: auto !important;
+                padding: 0.1in 0.2in !important;
+            }
+
+            .print-title-block > div[style*="min-height: 34%"] {
+                min-height: 34% !important;
+                height: auto !important;
+                padding: 0.1in 0.2in !important;
+            }
+
+            .print-title-block > div[style*="height: 12%"] {
+                height: 12% !important;
+                min-height: auto !important;
+                padding: 0.1in 0.2in !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="game-area">
+            <div class="main-panel">
+                <div class="drawing-grid">
+                    <div class="grid-cell">
+                        <div class="cell-label">Vista Frontal (X-Y)</div>
+                        <canvas id="frontView"></canvas>
+                    </div>
+                    <div class="grid-cell">
+                        <div class="cell-label">Vista Superior (X-Z)</div>
+                        <canvas id="topView"></canvas>
+                    </div>
+                    <div class="grid-cell">
+                        <div class="cell-label">Vista Lateral (Z-Y)</div>
+                        <canvas id="sideView"></canvas>
+                    </div>
+                    <div class="grid-cell">
+                        <div class="cell-label">Vista Isométrica</div>
+                        <canvas id="isoView"></canvas>
+                    </div>
+                </div>
+
+                <div id="feedback" class="feedback"></div>
+            </div>
+
+            <div class="preview-panel">
+
+                <!-- DIVISIÓN 1: 9% - Institution/Header -->
+                <div class="flex-shrink-0 p-2 flex flex-col justify-center text-left title-block-border" style="height: 9%;">
+                    <p class="text-sm font-bold tracking-tight text-gray-800">TECNOLÓGICO UNIVERSITARIO</p>
+                    <p class="text-data-label -mt-1">CAMPUS PLAYACAR</p>
+                </div>
+
+                <!-- DIVISIÓN 2: 6% - Period/Semester -->
+                <div class="flex-shrink-0 px-2 flex flex-col justify-center title-block-border" style="height: 6%;">
+                    <p class="text-data-label">CUATRIMESTRE:</p>
+                    <p class="text-xs font-semibold text-gray-700">OTOÑO 2025</p>
+                </div>
+
+                <!-- DIVISIÓN 3: 18% - Main Title -->
+                <div class="flex-shrink-0 p-2 flex flex-col justify-center text-left title-block-border" style="height: 18%;">
+                    <p class="text-3xl font-black text-gray-900 tracking-tighter leading-none">GEOMETRÍA DESCRIPTIVA II</p>
+                    <p class="text-data-label">CUARTO CUATRIMESTRE</p>
+                </div>
+
+                <!-- DIVISIÓN 4: 6% - Duration/Info -->
+                <div class="flex-shrink-0 px-2 flex flex-col justify-center title-block-border" style="height: 6%;">
+                    <p class="text-data-label">DURACIÓN:</p>
+                    <p class="text-xs font-semibold text-gray-700">02 DE SEPTIEMBRE A 09 DE DICIEMBRE 2025</p>
+                </div>
+
+                <!-- DIVISIÓN 5: 34% - Main Content Area (Controls, Instructions, etc.) -->
+                <div class="flex-grow p-2 flex flex-col justify-around title-block-border" style="min-height: 34%;">
+                    <div class="py-1">
+                        <p class="text-data-label">ESTUDIANTE:</p>
+                        <select id="studentSelect" class="control-btn" style="width: 100%; margin-top: 4px; padding: 6px 8px; font-size: 9px;">
+                            <option value="">Seleccionar estudiante...</option>
+                        </select>
+                    </div>
+
+                    <div class="py-1">
+                        <p class="text-data-label">NIVEL:</p>
+                        <p class="text-sm font-bold text-gray-800 leading-tight">
+                            <span id="pieceNumber">1</span> / 20
+                            <span id="difficulty-badge" class="difficulty-badge difficulty-easy">FÁCIL</span>
+                        </p>
+                    </div>
+
+                    <div class="py-1">
+                        <p class="text-data-label">MODO:</p>
+                        <button class="control-btn" onclick="gameManager.toggleMode()" style="width: 100%; margin-top: 4px;">
+                            <span id="mode-text">Cambiar a Modo Vistas</span>
+                        </button>
+                    </div>
+
+                    <div class="py-1">
+                        <p class="text-data-label">CONTROLES:</p>
+                        <div class="flex flex-wrap gap-1 mt-1">
+                            <button class="control-btn" onclick="gameManager.clearAll()">🗑️ Borrar</button>
+                            <button class="control-btn nav" onclick="gameManager.prevPiece()">⬅️ Ant.</button>
+                            <button class="control-btn nav" onclick="gameManager.nextPiece()">➡️ Sig.</button>
+                        </div>
+                    </div>
+
+                    <div class="py-1">
+                        <p class="text-data-label">IMPRIMIR:</p>
+                        <button class="control-btn" onclick="printPDF()" style="width: 100%; margin-top: 4px; background: #1f2937; color: white;">
+                            📄 Generar PDF
+                        </button>
+                    </div>
+
+                    <div class="py-1" style="display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start;">
+                        <p class="text-data-label" style="margin: 0;">TIPOS DE LÍNEA:</p>
+                        <div style="font-size: 9px; color: #4b5563; line-height: 1.4;">
+                            <div style="margin-bottom: 2px;">▬ Visible (Click 1)</div>
+                            <div style="margin-bottom: 2px;">┈ Oculta (Click 2)</div>
+                            <div style="margin-bottom: 2px;">○ Sin línea (Click 3)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DIVISIÓN 6: 6% - Schedule/Info -->
+                <div class="flex-shrink-0 px-2 flex flex-col justify-center title-block-border" style="height: 6%;">
+                    <p class="text-data-label">ETAPA:</p>
+                    <p class="text-xs font-semibold text-gray-700">PRIMER PARCIAL</p>
+                </div>
+
+                <!-- DIVISIÓN 7: 9% - Student Info -->
+                <div class="flex-shrink-0 p-2 flex flex-col justify-center title-block-border" style="height: 9%;">
+                    <p class="text-data-label">NOMBRE DEL ESTUDIANTE:</p>
+                    <p class="text-xs font-extrabold text-gray-900" id="studentNameDisplay" style="line-height: 1.2;">
+                        <span style="font-size: 0.65rem;">Selecciona un estudiante arriba</span>
+                    </p>
+                </div>
+
+                <!-- DIVISIÓN 8: 12% - Course Code (Dark Background) -->
+                <div class="flex-shrink-0 p-2 flex items-center justify-center bg-gray-900 text-white" style="height: 12%;">
+                    <div class="leading-none text-center">
+                        <p class="text-data-label text-gray-300 mb-1">CLAVE DE LÁMINA</p>
+                        <p class="text-4xl font-black tracking-tighter">ISO-01</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Container (hidden, only visible when printing) -->
+    <div id="printContainer"></div>
+
+    <script>
+        'use strict';
+
+        // ============================================
+        // PIECE DEFINITIONS (Progressive difficulty)
+        // ============================================
+
+        const PIECES = [
+            // EASY (1-5): Single simple objects
+            { voxels: [[1,0,1]], name: "Cubo Simple", difficulty: "easy" },
+            { voxels: [[1,0,1], [2,0,1]], name: "Barra Horizontal", difficulty: "easy" },
+            { voxels: [[1,0,1], [1,1,1]], name: "Barra Vertical", difficulty: "easy" },
+            { voxels: [[1,0,1], [1,0,2]], name: "Barra Profunda", difficulty: "easy" },
+            { voxels: [[1,0,1], [2,0,1], [1,1,1]], name: "L Simple", difficulty: "easy" },
+
+            // MEDIUM (6-10): More complex single objects
+            { voxels: [[1,0,1], [2,0,1], [2,0,2]], name: "L Horizontal", difficulty: "medium" },
+            { voxels: [[1,0,1], [1,1,1], [2,1,1]], name: "L Vertical", difficulty: "medium" },
+            { voxels: [[1,0,1], [2,0,1], [3,0,1], [2,1,1]], name: "T", difficulty: "medium" },
+            { voxels: [[1,0,1], [1,1,1], [1,2,1]], name: "Torre 3", difficulty: "medium" },
+            { voxels: [[1,0,1], [2,0,1], [1,0,2], [2,0,2]], name: "Cuadrado 2x2", difficulty: "medium" },
+
+            // HARD (11-15): Complex single objects
+            { voxels: [[1,0,1], [2,0,1], [2,0,2], [3,0,2]], name: "Escalera Z", difficulty: "hard" },
+            { voxels: [[2,0,1], [1,0,2], [2,0,2], [3,0,2], [2,0,3]], name: "Cruz", difficulty: "hard" },
+            { voxels: [[1,0,1], [2,0,1], [2,1,1], [3,1,1]], name: "Escalera Doble", difficulty: "hard" },
+            { voxels: [[1,0,1], [2,0,1], [2,0,2], [2,1,2]], name: "L 3D", difficulty: "hard" },
+            { voxels: [[1,0,1], [2,0,1], [1,1,1], [2,1,1]], name: "Columna 2x2", difficulty: "hard" },
+
+            // EXPERT (16-20): Multiple separate objects
+            {
+                voxels: [[1,0,1], [1,0,2]],
+                voxels2: [[3,0,1], [3,0,2]],
+                name: "Dos Barras",
+                difficulty: "expert"
+            },
+            {
+                voxels: [[1,0,1], [1,1,1]],
+                voxels2: [[3,0,2], [3,1,2]],
+                name: "Dos Torres",
+                difficulty: "expert"
+            },
+            {
+                voxels: [[1,0,1], [2,0,1]],
+                voxels2: [[3,1,2], [4,1,2]],
+                name: "Barras Escalonadas",
+                difficulty: "expert"
+            },
+            {
+                voxels: [[1,0,1]],
+                voxels2: [[2,0,2]],
+                voxels3: [[3,0,3]],
+                name: "Diagonal de Cubos",
+                difficulty: "expert"
+            },
+            {
+                voxels: [[1,0,1], [2,0,1]],
+                voxels2: [[2,1,2], [3,1,2]],
+                voxels3: [[3,0,3]],
+                name: "Estructura Compleja",
+                difficulty: "expert"
+            }
+        ];
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+
+        function getAllVoxels(piece) {
+            let allVoxels = [...piece.voxels];
+            if (piece.voxels2) allVoxels = allVoxels.concat(piece.voxels2);
+            if (piece.voxels3) allVoxels = allVoxels.concat(piece.voxels3);
+            return allVoxels;
+        }
+
+        // ============================================
+        // ISOMETRIC GRID FUNCTION FOR ORTHO MODE
+        // ============================================
+
+        function drawIsometricGrid(ctx, width, height) {
+            const gridSize = 6;
+            const cellSize = Math.min(width, height) * 0.95 / 12;
+            const offsetX = width / 2;
+            const offsetY = height / 2;
+
+            const toIso = (x, y, z) => {
+                const isoX = (x - z) * cellSize;
+                const isoY = (x + z) * cellSize * 0.5 - y * cellSize;
+                return { x: offsetX + isoX, y: offsetY + isoY };
+            };
+
+            // Draw light grid lines
+            ctx.strokeStyle = '#e0e7ff';
+            ctx.lineWidth = 0.5;
+            ctx.setLineDash([]);
+
+            // Draw grid lines for each plane
+            for (let i = 0; i <= gridSize; i++) {
+                // Floor plane (X-Z)
+                for (let j = 0; j < gridSize; j++) {
+                    // X direction lines
+                    let p1 = toIso(i, 0, j);
+                    let p2 = toIso(i, 0, j + 1);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+
+                    // Z direction lines  
+                    p1 = toIso(j, 0, i);
+                    p2 = toIso(j + 1, 0, i);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+
+                // Left wall (Y-Z)
+                for (let j = 0; j < gridSize; j++) {
+                    // Z direction lines
+                    let p1 = toIso(0, i, j);
+                    let p2 = toIso(0, i, j + 1);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+
+                    // Y direction lines
+                    p1 = toIso(0, j, i);
+                    p2 = toIso(0, j + 1, i);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+
+                // Right wall (X-Y)
+                for (let j = 0; j < gridSize; j++) {
+                    // X direction lines
+                    let p1 = toIso(i, j, 0);
+                    let p2 = toIso(i, j + 1, 0);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+
+                    // Y direction lines
+                    p1 = toIso(j, i, 0);
+                    p2 = toIso(j + 1, i, 0);
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            }
+
+            // Draw axis labels
+            const origin = toIso(0, 0, 0);
+            const xAxisEnd = toIso(1, 0, 0);
+            const yAxisEnd = toIso(0, 1, 0);
+            const zAxisEnd = toIso(0, 0, 1);
+
+            // Draw axes
+            ctx.strokeStyle = '#374151';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
+
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(xAxisEnd.x, xAxisEnd.y);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(yAxisEnd.x, yAxisEnd.y);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(zAxisEnd.x, zAxisEnd.y);
+            ctx.stroke();
+
+            // Axis labels
+            ctx.fillStyle = '#374151';
+            ctx.font = 'bold 12px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText('X', xAxisEnd.x + 10, xAxisEnd.y + 5);
+            ctx.fillText('Y', yAxisEnd.x, yAxisEnd.y - 10);
+            ctx.fillText('Z', zAxisEnd.x - 10, zAxisEnd.y + 5);
+
+            // Plane labels
+            ctx.fillStyle = 'rgba(55, 65, 81, 0.6)';
+            ctx.font = 'bold 14px Inter';
+
+            // X-Z Plane (Floor)
+            let p_xz = toIso(gridSize / 2, 0, gridSize);
+            ctx.fillText("X-Z", p_xz.x, p_xz.y + 15);
+
+            // Y-Z Plane (Left Wall)
+            let p_yz = toIso(0.5, gridSize / 2, gridSize - 0.5);
+            ctx.fillText("Y-Z", p_yz.x, p_yz.y);
+
+            // X-Y Plane (Right Wall)
+            let p_xy = toIso(gridSize - 0.5, gridSize / 2, 0.5);
+            ctx.fillText("X-Y", p_xy.x, p_xy.y);
+        }
+
+        // ============================================
+        // BASE GAME CLASS
+        // ============================================
+
+        class BaseGame {
+            constructor() {
+                this.currentPiece = 0;
+                this.lines = [];
+                this.gridSize = 6;
+            }
+
+            distanceToSegment(px, py, x1, y1, x2, y2) {
+                const A = px - x1;
+                const B = py - y1;
+                const C = x2 - x1;
+                const D = y2 - y1;
+                const dot = A * C + B * D;
+                const lenSq = C * C + D * D;
+
+                if (lenSq === 0) return Math.sqrt(A * A + B * B);
+
+                let param = dot / lenSq;
+                param = Math.max(0, Math.min(1, param));
+
+                const xx = x1 + param * C;
+                const yy = y1 + param * D;
+                const dx = px - xx;
+                const dy = py - yy;
+
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            saveCurrentWork() {
+                // Override in subclasses
+            }
+
+            loadWork(pieceIndex) {
+                // Override in subclasses
+            }
+
+            nextPiece() {
+                this.saveCurrentWork();
+                this.currentPiece = (this.currentPiece + 1) % PIECES.length;
+                this.loadWork(this.currentPiece);
+                this.updateDisplay();
+            }
+
+            prevPiece() {
+                this.saveCurrentWork();
+                this.currentPiece = (this.currentPiece - 1 + PIECES.length) % PIECES.length;
+                this.loadWork(this.currentPiece);
+                this.updateDisplay();
+            }
+
+            clearAll() {
+                this.lines.forEach(line => line.state = 0);
+                this.hideFeedback();
+                this.draw();
+            }
+
+            updatePieceCounter() {
+                const piece = PIECES[this.currentPiece];
+                document.getElementById('pieceNumber').textContent = this.currentPiece + 1;
+
+                const badge = document.getElementById('difficulty-badge');
+                badge.className = 'difficulty-badge difficulty-' + piece.difficulty;
+                badge.textContent = piece.difficulty.toUpperCase();
+            }
+
+            hideFeedback() {
+                const feedback = document.getElementById('feedback');
+                feedback.className = 'feedback';
+                feedback.style.display = 'none';
+            }
+
+            showFeedback(success, message) {
+                const feedback = document.getElementById('feedback');
+                feedback.className = success ? 'feedback success' : 'feedback error';
+                feedback.textContent = message;
+                feedback.style.display = 'block';
+            }
+
+            destroy() {
+                // Override in subclasses
+            }
+        }
+
+        // ============================================
+        // ISOMETRIC MODE - Build 3D from 2D views
+        // ============================================
+
+        class IsometricMode extends BaseGame {
+            constructor(workCanvas, frontCanvas, topCanvas, sideCanvas) {
+                super();
+                this.workCanvas = workCanvas;
+                this.workCtx = workCanvas.getContext('2d');
+                this.frontCanvas = frontCanvas;
+                this.topCanvas = topCanvas;
+                this.sideCanvas = sideCanvas;
+
+                // Set canvas dimensions based on their container size
+                this.initializeCanvasSizes();
+
+                // Calculate isometric cell size to fill 95% of canvas
+                const w = workCanvas.width;
+                const h = workCanvas.height;
+                const gridSize = 6;
+
+                // Isometric 6×6×6 cube spans approximately 12×cellSize in both width and height
+                // To fill 95% of canvas: 12 × cellSize = 0.95 × min(w, h)
+                const cellSize = (Math.min(w, h) * 0.95) / 12;
+
+                this.cellSize = cellSize;
+
+                // Center the isometric projection within canvas bounds
+                this.offsetX = w / 2;
+                this.offsetY = h / 2;
+
+                this.setupLines();
+                this.loadWork(this.currentPiece);
+                this.clickHandler = this.handleClick.bind(this);
+                this.workCanvas.addEventListener('click', this.clickHandler);
+
+                this.updateDisplay();
+            }
+
+            initializeCanvasSizes() {
+                [this.workCanvas, this.frontCanvas, this.topCanvas, this.sideCanvas].forEach(canvas => {
+                    const rect = canvas.getBoundingClientRect();
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+                });
+            }
+
+            setupLines() {
+                this.lines = [];
+
+                for (let x = 0; x <= this.gridSize; x++) {
+                    for (let y = 0; y <= this.gridSize; y++) {
+                        for (let z = 0; z <= this.gridSize; z++) {
+                            const isoPos = this.toIso(x, y, z);
+
+                            // Vertical lines (Y direction)
+                            if (y < this.gridSize) {
+                                const isoPos2 = this.toIso(x, y + 1, z);
+                                this.lines.push({
+                                    type: 'v',
+                                    x1: isoPos.x, y1: isoPos.y,
+                                    x2: isoPos2.x, y2: isoPos2.y,
+                                    state: 0,
+                                    voxel: [x, y, z],
+                                    dir: 'y'
+                                });
+                            }
+
+                            // X direction
+                            if (x < this.gridSize) {
+                                const isoPos2 = this.toIso(x + 1, y, z);
+                                this.lines.push({
+                                    type: 'x',
+                                    x1: isoPos.x, y1: isoPos.y,
+                                    x2: isoPos2.x, y2: isoPos2.y,
+                                    state: 0,
+                                    voxel: [x, y, z],
+                                    dir: 'x'
+                                });
+                            }
+
+                            // Z direction
+                            if (z < this.gridSize) {
+                                const isoPos2 = this.toIso(x, y, z + 1);
+                                this.lines.push({
+                                    type: 'w',
+                                    x1: isoPos.x, y1: isoPos.y,
+                                    x2: isoPos2.x, y2: isoPos2.y,
+                                    state: 0,
+                                    voxel: [x, y, z],
+                                    dir: 'z'
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            toIso(x, y, z) {
+                const isoX = (x - z) * this.cellSize;
+                const isoY = (x + z) * this.cellSize * 0.5 - y * this.cellSize;
+                return {
+                    x: this.offsetX + isoX,
+                    y: this.offsetY + isoY
+                };
+            }
+
+            handleClick(e) {
+                const rect = this.workCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                for (let line of this.lines) {
+                    if (this.distanceToSegment(x, y, line.x1, line.y1, line.x2, line.y2) < 8) {
+                        line.state = (line.state + 1) % 3;
+                        this.hideFeedback();
+                        this.draw();
+                        break;
+                    }
+                }
+            }
+
+            getSolutionLines() {
+                const piece = PIECES[this.currentPiece];
+                const allVoxels = getAllVoxels(piece);
+                const solution = new Set();
+
+                allVoxels.forEach(([x, y, z]) => {
+                    // Y direction (vertical)
+                    if (y < this.gridSize - 1) {
+                        const hasAbove = allVoxels.some(([vx, vy, vz]) => vx === x && vy === y + 1 && vz === z);
+                        if (!hasAbove) {
+                            solution.add(`${x},${y},${z},y`);
+                        }
+                    }
+
+                    if (y > 0) {
+                        const hasBelow = allVoxels.some(([vx, vy, vz]) => vx === x && vy === y - 1 && vz === z);
+                        if (!hasBelow) {
+                            solution.add(`${x},${y-1},${z},y`);
+                        }
+                    } else {
+                        solution.add(`${x},${y},${z},y`);
+                    }
+
+                    // X direction
+                    if (x < this.gridSize - 1) {
+                        const hasRight = allVoxels.some(([vx, vy, vz]) => vx === x + 1 && vy === y && vz === z);
+                        if (!hasRight) {
+                            solution.add(`${x},${y},${z},x`);
+                        }
+                    }
+
+                    if (x > 0) {
+                        const hasLeft = allVoxels.some(([vx, vy, vz]) => vx === x - 1 && vy === y && vz === z);
+                        if (!hasLeft) {
+                            solution.add(`${x-1},${y},${z},x`);
+                        }
+                    } else {
+                        solution.add(`${x},${y},${z},x`);
+                    }
+
+                    // Z direction
+                    if (z < this.gridSize - 1) {
+                        const hasFront = allVoxels.some(([vx, vy, vz]) => vx === x && vy === y && vz === z + 1);
+                        if (!hasFront) {
+                            solution.add(`${x},${y},${z},z`);
+                        }
+                    }
+
+                    if (z > 0) {
+                        const hasBack = allVoxels.some(([vx, vy, vz]) => vx === x && vy === y && vz === z - 1);
+                        if (!hasBack) {
+                            solution.add(`${x},${y},${z-1},z`);
+                        }
+                    } else {
+                        solution.add(`${x},${y},${z},z`);
+                    }
+                });
+
+                return solution;
+            }
+
+            verify() {
+                this.showFeedback(false, 'La verificación está desactivada.');
+            }
+
+            updateDisplay() {
+                this.updatePieceCounter();
+                this.drawOrthogonalViews();
+                this.hideFeedback();
+                this.draw();
+            }
+
+            drawOrthogonalViews() {
+                const piece = PIECES[this.currentPiece];
+                this.drawFrontView(piece);
+                this.drawTopView(piece);
+                this.drawSideView(piece);
+            }
+
+            drawOrthoGrid(ctx, w, h, offsetX, offsetY, scale, gridSize) {
+                // Draw grid lines matching the 3D grid
+                ctx.strokeStyle = '#d0d8e0';
+                ctx.lineWidth = 1;
+
+                // Vertical grid lines
+                for (let i = 0; i <= gridSize; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(offsetX + i * scale, offsetY);
+                    ctx.lineTo(offsetX + i * scale, offsetY + gridSize * scale);
+                    ctx.stroke();
+                }
+
+                // Horizontal grid lines
+                for (let i = 0; i <= gridSize; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(offsetX, offsetY + i * scale);
+                    ctx.lineTo(offsetX + gridSize * scale, offsetY + i * scale);
+                    ctx.stroke();
+                }
+
+                // Draw grid boundary (bold frame)
+                ctx.strokeStyle = '#95a5a6';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(offsetX, offsetY, gridSize * scale, gridSize * scale);
+            }
+
+            drawFrontView(piece) {
+                const ctx = this.frontCanvas.getContext('2d');
+                const w = this.frontCanvas.width;
+                const h = this.frontCanvas.height;
+
+                ctx.clearRect(0, 0, w, h);
+
+                const scale = Math.min((w * 0.875) / this.gridSize, (h * 0.875) / this.gridSize);
+                const offsetX = (w - this.gridSize * scale) / 2;
+                const offsetY = (h - this.gridSize * scale) / 2;
+
+                // Draw grid
+                this.drawOrthoGrid(ctx, w, h, offsetX, offsetY, scale, this.gridSize);
+
+                // Project all voxels
+                const allVoxels = getAllVoxels(piece);
+                const projected = new Set();
+                allVoxels.forEach(([x, y, z]) => {
+                    projected.add(`${x},${y}`);
+                });
+
+                ctx.fillStyle = 'rgba(79, 172, 254, 0.6)';
+                ctx.strokeStyle = '#3a8ed1';
+                ctx.lineWidth = 2;
+
+                projected.forEach(key => {
+                    const [x, y] = key.split(',').map(Number);
+                    const px = offsetX + x * scale;
+                    const py = offsetY + (this.gridSize - 1 - y) * scale;
+                    ctx.fillRect(px, py, scale, scale);
+                    ctx.strokeRect(px, py, scale, scale);
+                });
+            }
+
+            drawTopView(piece) {
+                const ctx = this.topCanvas.getContext('2d');
+                const w = this.topCanvas.width;
+                const h = this.topCanvas.height;
+
+                ctx.clearRect(0, 0, w, h);
+
+                const scale = Math.min((w * 0.875) / this.gridSize, (h * 0.875) / this.gridSize);
+                const offsetX = (w - this.gridSize * scale) / 2;
+                const offsetY = (h - this.gridSize * scale) / 2;
+
+                // Draw grid
+                this.drawOrthoGrid(ctx, w, h, offsetX, offsetY, scale, this.gridSize);
+
+                const allVoxels = getAllVoxels(piece);
+                const projected = new Set();
+                allVoxels.forEach(([x, y, z]) => {
+                    projected.add(`${x},${z}`);
+                });
+
+                ctx.fillStyle = 'rgba(240, 147, 251, 0.6)';
+                ctx.strokeStyle = '#d66fe8';
+                ctx.lineWidth = 2;
+
+                projected.forEach(key => {
+                    const [x, z] = key.split(',').map(Number);
+                    const px = offsetX + x * scale;
+                    const py = offsetY + z * scale;
+                    ctx.fillRect(px, py, scale, scale);
+                    ctx.strokeRect(px, py, scale, scale);
+                });
+            }
+
+            drawSideView(piece) {
+                const ctx = this.sideCanvas.getContext('2d');
+                const w = this.sideCanvas.width;
+                const h = this.sideCanvas.height;
+
+                ctx.clearRect(0, 0, w, h);
+
+                const scale = Math.min((w * 0.875) / this.gridSize, (h * 0.875) / this.gridSize);
+                const offsetX = (w - this.gridSize * scale) / 2;
+                const offsetY = (h - this.gridSize * scale) / 2;
+
+                // Draw grid
+                this.drawOrthoGrid(ctx, w, h, offsetX, offsetY, scale, this.gridSize);
+
+                const allVoxels = getAllVoxels(piece);
+                const projected = new Set();
+                allVoxels.forEach(([x, y, z]) => {
+                    projected.add(`${z},${y}`);
+                });
+
+                ctx.fillStyle = 'rgba(102, 126, 234, 0.6)';
+                ctx.strokeStyle = '#4a5fc1';
+                ctx.lineWidth = 2;
+
+                projected.forEach(key => {
+                    const [z, y] = key.split(',').map(Number);
+                    const px = offsetX + z * scale;
+                    const py = offsetY + (this.gridSize - 1 - y) * scale;
+                    ctx.fillRect(px, py, scale, scale);
+                    ctx.strokeRect(px, py, scale, scale);
+                });
+            }
+
+            // CORRECCIÓN: Reemplazar la retícula actual por la función estándar drawIsometricGrid
+            draw() {
+                const ctx = this.workCtx;
+                ctx.clearRect(0, 0, this.workCanvas.width, this.workCanvas.height);
+
+                // Dibujar la retícula isométrica estándar
+                drawIsometricGrid(ctx, this.workCanvas.width, this.workCanvas.height);
+
+                // Dibujar todas las líneas interactivas del usuario
+                this.lines.forEach(line => {
+                    if (line.state === 0) {
+                        // Línea no dibujada - no se muestra
+                        return;
+                    } else if (line.state === 1) {
+                        // Línea sólida
+                        ctx.strokeStyle = '#f5576c';
+                        ctx.lineWidth = 3;
+                        ctx.setLineDash([]);
+                    } else if (line.state === 2) {
+                        // Línea punteada
+                        ctx.strokeStyle = '#f5576c';
+                        ctx.lineWidth = 3;
+                        ctx.setLineDash([8, 4]);
+                    }
+
+                    ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(line.x1, line.y1);
+                    ctx.lineTo(line.x2, line.y2);
+                    ctx.stroke();
+
+                    // Dibujar puntos en los extremos para líneas visibles
+                    if (line.state > 0) {
+                        ctx.setLineDash([]);
+                        ctx.fillStyle = '#f5576c';
+                        ctx.beginPath();
+                        ctx.arc(line.x1, line.y1, 4, 0, Math.PI * 2);
+                        ctx.arc(line.x2, line.y2, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                });
+
+                // Restaurar configuración por defecto
+                ctx.setLineDash([]);
+                
+                // Instrucciones para el usuario
+                ctx.fillStyle = '#374151';
+                ctx.font = '11px Inter';
+                ctx.textAlign = 'left';
+                ctx.fillText('Click: Sólida → Punteada → Oculta', 10, 20);
+            }
+
+            saveCurrentWork() {
+                studentWork.iso[this.currentPiece].lines = this.lines.map(line => ({
+                    ...line,
+                    state: line.state
+                }));
+            }
+
+            loadWork(pieceIndex) {
+                const saved = studentWork.iso[pieceIndex];
+                if (saved && saved.lines.length > 0) {
+                    saved.lines.forEach((savedLine, index) => {
+                        if (this.lines[index]) {
+                            this.lines[index].state = savedLine.state;
+                        }
+                    });
+                }
+            }
+
+            destroy() {
+                this.saveCurrentWork();
+                this.workCanvas.removeEventListener('click', this.clickHandler);
+            }
+        }
+
+        // ============================================
+        // ORTHOGONAL MODE - Build 2D views from 3D
+        // ============================================
+
+        class OrthogonalMode extends BaseGame {
+            constructor(frontCanvas, topCanvas, sideCanvas, isoCanvas) {
+                super();
+                this.frontCanvas = frontCanvas;
+                this.topCanvas = topCanvas;
+                this.sideCanvas = sideCanvas;
+                this.isoCanvas = isoCanvas;
+
+                // Set canvas dimensions based on their container size
+                this.initializeCanvasSizes();
+
+                this.cellSize = 45;
+
+                this.views = {
+                    front: {
+                        canvas: this.frontCanvas,
+                        ctx: this.frontCanvas.getContext('2d'),
+                        lines: [],
+                        offsetX: null,
+                        offsetY: null,
+                        color: '#4facfe'
+                    },
+                    top: {
+                        canvas: this.topCanvas,
+                        ctx: this.topCanvas.getContext('2d'),
+                        lines: [],
+                        offsetX: null,
+                        offsetY: null,
+                        color: '#f093fb'
+                    },
+                    side: {
+                        canvas: this.sideCanvas,
+                        ctx: this.sideCanvas.getContext('2d'),
+                        lines: [],
+                        offsetX: null,
+                        offsetY: null,
+                        color: '#667eea'
+                    }
+                };
+
+                this.setupLines();
+                this.loadWork(this.currentPiece);
+
+                this.frontClickHandler = this.handleClick.bind(this, 'front');
+                this.topClickHandler = this.handleClick.bind(this, 'top');
+                this.sideClickHandler = this.handleClick.bind(this, 'side');
+
+                this.frontCanvas.addEventListener('click', this.frontClickHandler);
+                this.topCanvas.addEventListener('click', this.topClickHandler);
+                this.sideCanvas.addEventListener('click', this.sideClickHandler);
+
+                this.updateDisplay();
+            }
+
+            initializeCanvasSizes() {
+                [this.frontCanvas, this.topCanvas, this.sideCanvas, this.isoCanvas].forEach(canvas => {
+                    const rect = canvas.getBoundingClientRect();
+                    canvas.width = rect.width;
+                    canvas.height = rect.height;
+                });
+            }
+
+            setupLines() {
+                // Calculate dynamic cell size for each canvas to fill 87.5% of space
+                for (let viewName in this.views) {
+                    const view = this.views[viewName];
+                    const w = view.canvas.width;
+                    const h = view.canvas.height;
+                    // Calculate cell size to fill 87.5% of canvas
+                    const cellSize = Math.min((w * 0.875) / this.gridSize, (h * 0.875) / this.gridSize);
+                    view.cellSize = cellSize;
+                    view.offsetX = (w - this.gridSize * cellSize) / 2;
+                    view.offsetY = (h - this.gridSize * cellSize) / 2;
+                }
+
+                // Front view
+                const frontCell = this.views.front.cellSize;
+                for (let y = 0; y <= this.gridSize; y++) {
+                    for (let x = 0; x <= this.gridSize; x++) {
+                        if (x < this.gridSize && y <= this.gridSize) {
+                            this.views.front.lines.push({
+                                type: 'h', view: 'front',
+                                x1: this.views.front.offsetX + x * frontCell,
+                                y1: this.views.front.offsetY + y * frontCell,
+                                x2: this.views.front.offsetX + (x + 1) * frontCell,
+                                y2: this.views.front.offsetY + y * frontCell,
+                                state: 0, grid: [x, y]
+                            });
+                        }
+                        if (y < this.gridSize && x <= this.gridSize) {
+                            this.views.front.lines.push({
+                                type: 'v', view: 'front',
+                                x1: this.views.front.offsetX + x * frontCell,
+                                y1: this.views.front.offsetY + y * frontCell,
+                                x2: this.views.front.offsetX + x * frontCell,
+                                y2: this.views.front.offsetY + (y + 1) * frontCell,
+                                state: 0, grid: [x, y]
+                            });
+                        }
+                    }
+                }
+
+                // Top view
+                const topCell = this.views.top.cellSize;
+                for (let z = 0; z <= this.gridSize; z++) {
+                    for (let x = 0; x <= this.gridSize; x++) {
+                        if (x < this.gridSize && z <= this.gridSize) {
+                            this.views.top.lines.push({
+                                type: 'h', view: 'top',
+                                x1: this.views.top.offsetX + x * topCell,
+                                y1: this.views.top.offsetY + z * topCell,
+                                x2: this.views.top.offsetX + (x + 1) * topCell,
+                                y2: this.views.top.offsetY + z * topCell,
+                                state: 0, grid: [x, z]
+                            });
+                        }
+                        if (z < this.gridSize && x <= this.gridSize) {
+                            this.views.top.lines.push({
+                                type: 'v', view: 'top',
+                                x1: this.views.top.offsetX + x * topCell,
+                                y1: this.views.top.offsetY + z * topCell,
+                                x2: this.views.top.offsetX + x * topCell,
+                                y2: this.views.top.offsetY + (z + 1) * topCell,
+                                state: 0, grid: [x, z]
+                            });
+                        }
+                    }
+                }
+
+                // Side view
+                const sideCell = this.views.side.cellSize;
+                for (let y = 0; y <= this.gridSize; y++) {
+                    for (let z = 0; z <= this.gridSize; z++) {
+                        if (z < this.gridSize && y <= this.gridSize) {
+                            this.views.side.lines.push({
+                                type: 'h', view: 'side',
+                                x1: this.views.side.offsetX + z * sideCell,
+                                y1: this.views.side.offsetY + y * sideCell,
+                                x2: this.views.side.offsetX + (z + 1) * sideCell,
+                                y2: this.views.side.offsetY + y * sideCell,
+                                state: 0, grid: [z, y]
+                            });
+                        }
+                        if (y < this.gridSize && z <= this.gridSize) {
+                            this.views.side.lines.push({
+                                type: 'v', view: 'side',
+                                x1: this.views.side.offsetX + z * sideCell,
+                                y1: this.views.side.offsetY + y * sideCell,
+                                x2: this.views.side.offsetX + z * sideCell,
+                                y2: this.views.side.offsetY + (y + 1) * sideCell,
+                                state: 0, grid: [z, y]
+                            });
+                        }
+                    }
+                }
+
+            }
+
+            handleClick(viewName, e) {
+                const view = this.views[viewName];
+                const rect = view.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                for (let line of view.lines) {
+                    if (this.distanceToSegment(x, y, line.x1, line.y1, line.x2, line.y2) < 8) {
+                        line.state = (line.state + 1) % 3;
+                        this.hideFeedback();
+                        this.draw();
+                        break;
+                    }
+                }
+            }
+
+            // CORRECCIÓN: Método clearAll para modo ortogonal
+            clearAll() {
+                for (let viewName in this.views) {
+                    this.views[viewName].lines.forEach(line => {
+                        line.state = 0;
+                    });
+                }
+                this.hideFeedback();
+                this.draw();
+            }
+
+            verify() {
+                this.showFeedback(false, 'La verificación está desactivada.');
+            }
+
+            getUserProjection(viewName, correctProj) {
+                const view = this.views[viewName];
+                const userCells = new Set();
+
+                view.lines.forEach(line => {
+                    if (line.state > 0) {
+                        const [a, b] = line.grid;
+                        userCells.add(`${a},${b}`);
+                    }
+                });
+
+                if (userCells.size !== correctProj.size) return false;
+
+                for (let cell of correctProj) {
+                    if (!userCells.has(cell)) return false;
+                }
+
+                return true;
+            }
+
+            updateDisplay() {
+                this.updatePieceCounter();
+                this.drawIsometricView();
+                this.hideFeedback();
+                this.draw();
+            }
+
+            drawIsometricView() {
+                const piece = PIECES[this.currentPiece];
+                this.drawIsometricViewWithGrid(piece);
+            }
+
+            drawIsometricViewWithGrid(piece) {
+                const ctx = this.isoCanvas.getContext('2d');
+                const w = this.isoCanvas.width;
+                const h = this.isoCanvas.height;
+
+                ctx.clearRect(0, 0, w, h);
+
+                // Draw the isometric grid first
+                drawIsometricGrid(ctx, w, h);
+
+                // Now draw the piece on top of the grid
+                const gridSize = 6;
+                const cellSize = Math.min(w, h) * 0.95 / 12;
+                const offsetX = w / 2;
+                const offsetY = h / 2;
+
+                const toIso = (x, y, z) => {
+                    const isoX = (x - z) * cellSize;
+                    const isoY = (x + z) * cellSize * 0.5 - y * cellSize;
+                    return { x: offsetX + isoX, y: offsetY + isoY };
+                };
+
+                const allVoxels = getAllVoxels(piece);
+
+                // Sort voxels for proper z-buffering
+                const sorted = [...allVoxels].sort((a, b) => {
+                    return (a[0] + a[2] - a[1]) - (b[0] + b[2] - b[1]);
+                });
+
+                // Draw each voxel
+                sorted.forEach(([x, y, z]) => {
+                    const p = toIso(x, y, z);
+
+                    // Top face (Y-Z plane) - Top view color
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(p.x + cellSize, p.y + cellSize * 0.5);
+                    ctx.lineTo(p.x, p.y + cellSize);
+                    ctx.lineTo(p.x - cellSize, p.y + cellSize * 0.5);
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(240, 147, 251, 0.7)';
+                    ctx.fill();
+                    ctx.strokeStyle = '#d66fe8';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+
+                    // Left face (Z-Y plane) - Side view color
+                    ctx.beginPath();
+                    ctx.moveTo(p.x - cellSize, p.y + cellSize * 0.5);
+                    ctx.lineTo(p.x, p.y + cellSize);
+                    ctx.lineTo(p.x, p.y + 2 * cellSize);
+                    ctx.lineTo(p.x - cellSize, p.y + 1.5 * cellSize);
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(79, 172, 254, 0.7)';
+                    ctx.fill();
+                    ctx.strokeStyle = '#3a8ed1';
+                    ctx.stroke();
+
+                    // Right face (X-Y plane) - Front view color
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y + cellSize);
+                    ctx.lineTo(p.x + cellSize, p.y + cellSize * 0.5);
+                    ctx.lineTo(p.x + cellSize, p.y + 1.5 * cellSize);
+                    ctx.lineTo(p.x, p.y + 2 * cellSize);
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(102, 126, 234, 0.7)';
+                    ctx.fill();
+                    ctx.strokeStyle = '#4a5fc1';
+                    ctx.stroke();
+                });
+            }
+
+            draw() {
+                // Draw each view on its own canvas
+                for (let viewName in this.views) {
+                    const view = this.views[viewName];
+                    const ctx = view.ctx;
+                    const w = view.canvas.width;
+                    const h = view.canvas.height;
+                    const cellSize = view.cellSize;
+
+                    ctx.clearRect(0, 0, w, h);
+
+                    // Draw grid lines
+                    ctx.strokeStyle = '#d0d8e0';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([]);
+
+                    for (let i = 0; i <= this.gridSize; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(view.offsetX + i * cellSize, view.offsetY);
+                        ctx.lineTo(view.offsetX + i * cellSize, view.offsetY + this.gridSize * cellSize);
+                        ctx.stroke();
+
+                        ctx.beginPath();
+                        ctx.moveTo(view.offsetX, view.offsetY + i * cellSize);
+                        ctx.lineTo(view.offsetX + this.gridSize * cellSize, view.offsetY + i * cellSize);
+                        ctx.stroke();
+                    }
+
+                    // Draw boundary
+                    ctx.strokeStyle = '#95a5a6';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(view.offsetX, view.offsetY, this.gridSize * cellSize, this.gridSize * cellSize);
+
+                    // Draw lines for this view
+                    view.lines.forEach(line => {
+                        if (line.state === 0) {
+                            ctx.strokeStyle = '#b0bec5';
+                            ctx.lineWidth = 1.5;
+                            ctx.setLineDash([]);
+                        } else if (line.state === 1) {
+                            ctx.strokeStyle = view.color;
+                            ctx.lineWidth = 3;
+                            ctx.setLineDash([]);
+                        } else if (line.state === 2) {
+                            ctx.strokeStyle = view.color;
+                            ctx.lineWidth = 3;
+                            ctx.setLineDash([8, 4]);
+                        }
+
+                        ctx.lineCap = 'round';
+                        ctx.beginPath();
+                        ctx.moveTo(line.x1, line.y1);
+                        ctx.lineTo(line.x2, line.y2);
+                        ctx.stroke();
+
+                        if (line.state > 0) {
+                            ctx.setLineDash([]);
+                            ctx.fillStyle = view.color;
+                            ctx.beginPath();
+                            ctx.arc(line.x1, line.y1, 4, 0, Math.PI * 2);
+                            ctx.arc(line.x2, line.y2, 4, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    });
+
+                    // Draw instruction text in top-left corner
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = '#374151';
+                    ctx.font = '11px Inter';
+                    ctx.textAlign = 'left';
+                    ctx.fillText('Click: Sólida → Punteada → Oculta', 10, 20);
+                }
+            }
+
+            saveCurrentWork() {
+                const allLines = [
+                    ...this.views.front.lines,
+                    ...this.views.top.lines,
+                    ...this.views.side.lines
+                ];
+                studentWork.ortho[this.currentPiece].lines = allLines.map(line => ({
+                    ...line,
+                    state: line.state
+                }));
+            }
+
+            loadWork(pieceIndex) {
+                const saved = studentWork.ortho[pieceIndex];
+                if (saved && saved.lines.length > 0) {
+                    for (let viewName in this.views) {
+                        const view = this.views[viewName];
+                        view.lines.forEach(line => {
+                            const savedLine = saved.lines.find(sl =>
+                                sl.view === line.view &&
+                                sl.x1 === line.x1 && sl.y1 === line.y1 &&
+                                sl.x2 === line.x2 && sl.y2 === line.y2
+                            );
+                            if (savedLine) {
+                                line.state = savedLine.state;
+                            }
+                        });
+                    }
+                }
+            }
+
+            destroy() {
+                this.saveCurrentWork();
+                this.frontCanvas.removeEventListener('click', this.frontClickHandler);
+                this.topCanvas.removeEventListener('click', this.topClickHandler);
+                this.sideCanvas.removeEventListener('click', this.sideClickHandler);
+            }
+        }
+
+        // ============================================
+        // GAME MANAGER
+        // ============================================
+
+        class GameManager {
+            constructor() {
+                this.currentMode = 'iso';
+                this.game = null;
+                this.keyHandler = this.handleGlobalKeys.bind(this);
+
+                document.addEventListener('keydown', this.keyHandler);
+                this.initGame();
+            }
+
+            handleGlobalKeys(e) {
+                if (!this.game) return;
+
+                switch(e.key) {
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        this.nextPiece();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        this.prevPiece();
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        this.clearAll();
+                        break;
+                }
+            }
+
+            initGame() {
+                if (this.game) {
+                    this.game.destroy();
+                }
+
+                const frontView = document.getElementById('frontView');
+                const topView = document.getElementById('topView');
+                const sideView = document.getElementById('sideView');
+                const isoView = document.getElementById('isoView');
+
+                if (this.currentMode === 'iso') {
+                    document.getElementById('mode-text').textContent = 'Cambiar a Modo Vistas';
+                    this.game = new IsometricMode(isoView, frontView, topView, sideView);
+                } else {
+                    document.getElementById('mode-text').textContent = 'Cambiar a Modo Isométrico';
+                    this.game = new OrthogonalMode(frontView, topView, sideView, isoView);
+                }
+            }
+
+            toggleMode() {
+                this.currentMode = this.currentMode === 'iso' ? 'ortho' : 'iso';
+                this.initGame();
+            }
+
+            nextPiece() {
+                if (this.game) this.game.nextPiece();
+            }
+
+            prevPiece() {
+                if (this.game) this.game.prevPiece();
+            }
+
+            clearAll() {
+                if (this.game) this.game.clearAll();
+            }
+
+            verify() {
+                if (this.game) this.game.verify();
+            }
+        }
+
+        // ============================================
+        // STUDENT DATA AND PDF FUNCTIONS
+        // ============================================
+
+        const STUDENTS = [
+            { name: "EYDALI AZENNETH CACH CHI", id: "7497" },
+            { name: "YOHANA NOEMI CARBALLO CACH", id: "7957" },
+            { name: "JARED ABRAHAM CARDENAS MUÑOZ", id: "7459" },
+            { name: "RUBI ESMERALDA CEL CABRERA", id: "7305" },
+            { name: "DIEGO ANDRES COCOM ALBORNOZ", id: "7546" },
+            { name: "SANDRA AIRAM CUPUL POMOL", id: "6389" },
+            { name: "BRENDA YARET HIDALGO ROSADO", id: "6445" },
+            { name: "LEYDI BEATRIZ MONTOYA CANCHE", id: "7222" },
+            { name: "ANTONIO EMMANUEL NOH BALAM", id: "7476" },
+            { name: "NICASIO ALEJANDRO OSORIO MAY", id: "7035" },
+            { name: "CALEB ABISAY PAT RICARTE", id: "7531" },
+            { name: "KAROL EMILIANO RAMIREZ MEZQUITA", id: "7333" },
+            { name: "EDGAR HUMBERTO RIVERO UC", id: "7419" },
+            { name: "JOSE LUIS RODRIGUEZ TORRES", id: "7563" },
+            { name: "ASHLEY MICHELLE TOSCANO VAZQUEZ", id: "6663" }
+        ];
+
+        let selectedStudent = null;
+
+        // Storage for student work on all exercises
+        const studentWork = {
+            iso: Array(20).fill(null).map(() => ({ lines: [] })),
+            ortho: Array(20).fill(null).map(() => ({ lines: [] }))
+        };
+
+        // Populate student dropdown
+        function initStudentDropdown() {
+            const select = document.getElementById('studentSelect');
+            if (!select) return;
+
+            STUDENTS.forEach(student => {
+                const option = document.createElement('option');
+                option.value = JSON.stringify(student);
+                option.textContent = `${student.name} (${student.id})`;
+                select.appendChild(option);
+            });
+
+            select.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    selectedStudent = JSON.parse(e.target.value);
+                    updateStudentDisplay();
+                } else {
+                    selectedStudent = null;
+                    updateStudentDisplay();
+                }
+            });
+        }
+
+        // Update student display
+        function updateStudentDisplay() {
+            const nameDisplay = document.getElementById('studentNameDisplay');
+
+            if (selectedStudent && nameDisplay) {
+                nameDisplay.innerHTML = `${selectedStudent.name}<br><span class="text-data-label">MATRÍCULA: TUP${selectedStudent.id}</span>`;
+            } else if (nameDisplay) {
+                nameDisplay.innerHTML = '<span style="font-size: 0.65rem;">Selecciona un estudiante arriba</span>';
+            }
+        }
+
+        // Generate print pages for all 40 exercises
+        function generatePrintPages() {
+            const printContainer = document.getElementById('printContainer');
+            printContainer.innerHTML = '';
+
+            // Generate 20 ISO mode pages
+            for (let i = 0; i < 20; i++) {
+                const page = createPrintPage(i, 'iso');
+                printContainer.appendChild(page);
+            }
+
+            // Generate 20 ORTHO mode pages
+            for (let i = 0; i < 20; i++) {
+                const page = createPrintPage(i, 'ortho');
+                printContainer.appendChild(page);
+            }
+        }
+
+        // Create a single print page
+        function createPrintPage(pieceIndex, mode) {
+            const piece = PIECES[pieceIndex];
+            const page = document.createElement('div');
+            page.className = 'print-page';
+
+            const isIso = mode === 'iso';
+            const sheetNumber = isIso ? `ISO-${String(pieceIndex + 1).padStart(2, '0')}` : `ORTHO-${String(pieceIndex + 1).padStart(2, '0')}`;
+
+            // Standardized 2x2 grid layout for ALL sheets (ISO and ORTHO)
+            // Layout: Vista Frontal | Vista Superior
+            //         Vista Lateral | Vista Isométrica
+            page.innerHTML = `
+            <div class="print-main">
+                <!-- Top-left: Front View -->
+                <div class="print-grid-cell">
+                    <div class="print-cell-label">Vista Frontal (X-Y)</div>
+                    <div id="print-front-${mode}-${pieceIndex}"></div>
+                </div>
+
+                <!-- Top-right: Top View -->
+                <div class="print-grid-cell">
+                    <div class="print-cell-label">Vista Superior (X-Z)</div>
+                    <div id="print-top-${mode}-${pieceIndex}"></div>
+                </div>
+
+                <!-- Bottom-left: Side View -->
+                <div class="print-grid-cell">
+                    <div class="print-cell-label">Vista Lateral (Z-Y)</div>
+                    <div id="print-side-${mode}-${pieceIndex}"></div>
+                </div>
+
+                <!-- Bottom-right: Isometric View -->
+                <div class="print-grid-cell">
+                    <div class="print-cell-label">Vista Isométrica</div>
+                    <div id="print-iso-${mode}-${pieceIndex}"></div>
+                </div>
+            </div>`
+
+            // Add title block HTML
+            page.innerHTML += `
+
+                <div class="print-title-block">
+                    <div style="flex-shrink: 0; height: 9%; padding: 0.1in 0.2in; display: flex; flex-direction: column; justify-content: center; text-align: left;">
+                        <p style="font-size: 0.875rem; font-weight: 700; letter-spacing: -0.025em; color: #1f2937;">TECNOLÓGICO UNIVERSITARIO</p>
+                        <p class="text-data-label" style="margin-top: -0.25rem;">CAMPUS PLAYACAR</p>
+                    </div>
+
+                    <div style="flex-shrink: 0; height: 6%; padding: 0.05in 0.2in; display: flex; flex-direction: column; justify-content: center;">
+                        <p class="text-data-label">CUATRIMESTRE:</p>
+                        <p class="text-xs" style="font-weight: 600; color: #374151;">OTOÑO 2025</p>
+                    </div>
+
+                    <div style="flex-shrink: 0; height: 18%; padding: 0.1in 0.2in; display: flex; flex-direction: column; justify-content: center; text-align: left;">
+                        <p style="font-size: 1.875rem; font-weight: 900; color: #111827; letter-spacing: -0.05em; line-height: 1;">GEOMETRÍA DESCRIPTIVA II</p>
+                        <p class="text-data-label">CUARTO CUATRIMESTRE</p>
+                    </div>
+
+                    <div style="flex-shrink: 0; height: 6%; padding: 0.05in 0.2in; display: flex; flex-direction: column; justify-content: center;">
+                        <p class="text-data-label">DURACIÓN:</p>
+                        <p class="text-xs" style="font-weight: 600; color: #374151;">02 DE SEPTIEMBRE A 09 DE DICIEMBRE 2025</p>
+                    </div>
+
+                    <div style="flex-grow: 1; padding: 0.1in 0.2in; display: flex; flex-direction: column; justify-content: space-around; min-height: 34%;">
+                        <div style="padding: 0.25rem 0;">
+                            <p class="text-data-label">EJERCICIO:</p>
+                            <p class="text-sm" style="font-weight: 700; color: #1f2937;">${piece.name}</p>
+                        </div>
+
+                        <div style="padding: 0.25rem 0;">
+                            <p class="text-data-label">NIVEL:</p>
+                            <p class="text-sm" style="font-weight: 700; color: #1f2937;">
+                                ${pieceIndex + 1} / 20
+                                <span class="difficulty-badge difficulty-${piece.difficulty}" style="display: inline-block; padding: 2px 6px; border-radius: 0; font-size: 9px; font-weight: 700; margin-left: 6px; border: 1px solid;">${piece.difficulty.toUpperCase()}</span>
+                            </p>
+                        </div>
+
+                        <div style="padding: 0.25rem 0;">
+                            <p class="text-data-label">TIPOS DE LÍNEA:</p>
+                            <div style="font-size: 9px; color: #4b5563; margin-top: 4px; line-height: 1.4;">
+                                <div style="margin-bottom: 2px;">▬ Visible (Click 1)</div>
+                                <div style="margin-bottom: 2px;">┈ Oculta (Click 2)</div>
+                                <div style="margin-bottom: 2px;">○ Sin línea (Click 3)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="flex-shrink-0; height: 6%; padding: 0.05in 0.2in; display: flex; flex-direction: column; justify-content: center;">
+                        <p class="text-data-label">ETAPA:</p>
+                        <p class="text-xs" style="font-weight: 600; color: #374151;">PRIMER PARCIAL</p>
+                    </div>
+
+                    <div style="flex-shrink-0; height: 9%; padding: 0.1in 0.2in; display: flex; flex-direction: column; justify-content: center;">
+                        <p class="text-data-label">NOMBRE DEL ESTUDIANTE:</p>
+                        <p class="text-xs" style="font-weight: 800; color: #111827; line-height: 1.2;">${selectedStudent ? selectedStudent.name : ''}<br><span class="text-data-label">MATRÍCULA: TUP${selectedStudent ? selectedStudent.id : ''}</span></p>
+                    </div>
+
+                    <div style="flex-shrink-0; height: 12%; padding: 0.1in 0.2in; display: flex; align-items: center; justify-content: center; background-color: #111827; color: white;">
+                        <div style="line-height: 1; text-align: center;">
+                            <p class="text-data-label" style="color: #d1d5db; margin-bottom: 0.25rem;">CLAVE DE LÁMINA</p>
+                            <p style="font-size: 2.25rem; font-weight: 900; letter-spacing: -0.05em;">${sheetNumber}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return page;
+        }
+
+        // Render views and work canvas for print
+        function renderPrintCanvases() {
+            for (let i = 0; i < 20; i++) {
+                // Render ISO mode
+                renderPrintPage(i, 'iso');
+                // Render ORTHO mode
+                renderPrintPage(i, 'ortho');
+            }
+        }
+
+        // CORRECCIÓN COMPLETA: Función para renderizar líneas isométricas en impresión con recálculo de coordenadas
+        function renderIsometricLinesForPrint(ctx, lines, width, height) {
+            const gridSize = 6;
+            const cellSize = Math.min(width, height) * 0.95 / 12;
+            const offsetX = width / 2;
+            const offsetY = height / 2;
+
+            // Función para convertir coordenadas 3D a isométricas
+            const toIso = (x, y, z) => {
+                const isoX = (x - z) * cellSize;
+                const isoY = (x + z) * cellSize * 0.5 - y * cellSize;
+                return { x: offsetX + isoX, y: offsetY + isoY };
+            };
+
+            // Dibujar cada línea recalculando sus coordenadas
+            lines.forEach(line => {
+                if (line.state === 0) return; // Saltar líneas no dibujadas
+
+                // Recalcular las coordenadas basadas en la información del voxel y dirección
+                const [x, y, z] = line.voxel;
+                let startPoint, endPoint;
+
+                if (line.dir === 'x') {
+                    // Línea en dirección X
+                    startPoint = toIso(x, y, z);
+                    endPoint = toIso(x + 1, y, z);
+                } else if (line.dir === 'y') {
+                    // Línea en dirección Y
+                    startPoint = toIso(x, y, z);
+                    endPoint = toIso(x, y + 1, z);
+                } else if (line.dir === 'z') {
+                    // Línea en dirección Z
+                    startPoint = toIso(x, y, z);
+                    endPoint = toIso(x, y, z + 1);
+                }
+
+                // Aplicar estilo según el estado de la línea
+                if (line.state === 1) {
+                    // Línea sólida
+                    ctx.strokeStyle = '#f5576c';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([]);
+                } else if (line.state === 2) {
+                    // Línea punteada
+                    ctx.strokeStyle = '#f5576c';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([8, 4]);
+                }
+
+                // Dibujar la línea
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(startPoint.x, startPoint.y);
+                ctx.lineTo(endPoint.x, endPoint.y);
+                ctx.stroke();
+
+                // Dibujar puntos en los extremos
+                if (line.state > 0) {
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = '#f5576c';
+                    ctx.beginPath();
+                    ctx.arc(startPoint.x, startPoint.y, 4, 0, Math.PI * 2);
+                    ctx.arc(endPoint.x, endPoint.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+            ctx.setLineDash([]);
+        }
+
+        // Render a single print page with standardized layout
+        function renderPrintPage(pieceIndex, mode) {
+            const piece = PIECES[pieceIndex];
+            const isIso = mode === 'iso';
+
+            // Tamaño reducido para caber en las celdas
+            const canvasWidth = 380;
+            const canvasHeight = 300;
+
+            // Get student's saved work
+            const savedWork = isIso ? studentWork.iso[pieceIndex] : studentWork.ortho[pieceIndex];
+
+            // Front View (top-left)
+            const frontContainer = document.getElementById(`print-front-${mode}-${pieceIndex}`);
+            if (frontContainer) {
+                const frontCanvas = document.createElement('canvas');
+                frontCanvas.width = canvasWidth;
+                frontCanvas.height = canvasHeight;
+                frontContainer.appendChild(frontCanvas);
+
+                if (isIso) {
+                    // ISO mode: Show GIVEN front view
+                    drawOrthogonalView(frontCanvas, piece, 'front');
+                } else {
+                    // ORTHO mode: Show STUDENT'S front view
+                    const ctx = frontCanvas.getContext('2d');
+                    if (savedWork && savedWork.lines.length > 0) {
+                        const frontLines = savedWork.lines.filter(l => l.view === 'front');
+                        renderOrthogonalLines(ctx, frontLines, canvasWidth, canvasHeight);
+                    }
+                }
+            }
+
+            // Top View (top-right)
+            const topContainer = document.getElementById(`print-top-${mode}-${pieceIndex}`);
+            if (topContainer) {
+                const topCanvas = document.createElement('canvas');
+                topCanvas.width = canvasWidth;
+                topCanvas.height = canvasHeight;
+                topContainer.appendChild(topCanvas);
+
+                if (isIso) {
+                    // ISO mode: Show GIVEN top view
+                    drawOrthogonalView(topCanvas, piece, 'top');
+                } else {
+                    // ORTHO mode: Show STUDENT'S top view
+                    const ctx = topCanvas.getContext('2d');
+                    if (savedWork && savedWork.lines.length > 0) {
+                        const topLines = savedWork.lines.filter(l => l.view === 'top');
+                        renderOrthogonalLines(ctx, topLines, canvasWidth, canvasHeight);
+                    }
+                }
+            }
+
+            // Side View (bottom-left)
+            const sideContainer = document.getElementById(`print-side-${mode}-${pieceIndex}`);
+            if (sideContainer) {
+                const sideCanvas = document.createElement('canvas');
+                sideCanvas.width = canvasWidth;
+                sideCanvas.height = canvasHeight;
+                sideContainer.appendChild(sideCanvas);
+
+                if (isIso) {
+                    // ISO mode: Show GIVEN side view
+                    drawOrthogonalView(sideCanvas, piece, 'side');
+                } else {
+                    // ORTHO mode: Show STUDENT'S side view
+                    const ctx = sideCanvas.getContext('2d');
+                    if (savedWork && savedWork.lines.length > 0) {
+                        const sideLines = savedWork.lines.filter(l => l.view === 'side');
+                        renderOrthogonalLines(ctx, sideLines, canvasWidth, canvasHeight);
+                    }
+                }
+            }
+
+            // Isometric View (bottom-right)
+            const isoContainer = document.getElementById(`print-iso-${mode}-${pieceIndex}`);
+            if (isoContainer) {
+                const isoCanvas = document.createElement('canvas');
+                isoCanvas.width = canvasWidth;
+                isoCanvas.height = canvasHeight;
+                isoContainer.appendChild(isoCanvas);
+
+                if (isIso) {
+                    // ISO mode: Show STUDENT'S isometric work
+                    const ctx = isoCanvas.getContext('2d');
+                    
+                    // Dibujar la retícula isométrica primero
+                    drawIsometricGrid(ctx, isoCanvas.width, isoCanvas.height);
+                    
+                    // Luego dibujar las líneas del estudiante con recálculo de coordenadas
+                    if (savedWork && savedWork.lines.length > 0) {
+                        renderIsometricLinesForPrint(ctx, savedWork.lines, isoCanvas.width, isoCanvas.height);
+                    }
+                } else {
+                    // ORTHO mode: Show GIVEN isometric view
+                    drawIsometricViewForPrint(isoCanvas, piece);
+                }
+            }
+        }
+
+        // CORRECCIÓN: Función para dibujar vista isométrica en impresión
+        function drawIsometricViewForPrint(canvas, piece) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw the isometric grid first
+            drawIsometricGrid(ctx, w, h);
+
+            // Now draw the piece on top of the grid
+            const gridSize = 6;
+            const cellSize = Math.min(w, h) * 0.95 / 12;
+            const offsetX = w / 2;
+            const offsetY = h / 2;
+
+            const toIso = (x, y, z) => {
+                const isoX = (x - z) * cellSize;
+                const isoY = (x + z) * cellSize * 0.5 - y * cellSize;
+                return { x: offsetX + isoX, y: offsetY + isoY };
+            };
+
+            const allVoxels = getAllVoxels(piece);
+
+            // Sort voxels for proper z-buffering
+            const sorted = [...allVoxels].sort((a, b) => {
+                return (a[0] + a[2] - a[1]) - (b[0] + b[2] - b[1]);
+            });
+
+            // Draw each voxel
+            sorted.forEach(([x, y, z]) => {
+                const p = toIso(x, y, z);
+
+                // Top face (Y-Z plane) - Top view color
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x + cellSize, p.y + cellSize * 0.5);
+                ctx.lineTo(p.x, p.y + cellSize);
+                ctx.lineTo(p.x - cellSize, p.y + cellSize * 0.5);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(240, 147, 251, 0.7)';
+                ctx.fill();
+                ctx.strokeStyle = '#d66fe8';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Left face (Z-Y plane) - Side view color
+                ctx.beginPath();
+                ctx.moveTo(p.x - cellSize, p.y + cellSize * 0.5);
+                ctx.lineTo(p.x, p.y + cellSize);
+                ctx.lineTo(p.x, p.y + 2 * cellSize);
+                ctx.lineTo(p.x - cellSize, p.y + 1.5 * cellSize);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(79, 172, 254, 0.7)';
+                ctx.fill();
+                ctx.strokeStyle = '#3a8ed1';
+                ctx.stroke();
+
+                // Right face (X-Y plane) - Front view color
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y + cellSize);
+                ctx.lineTo(p.x + cellSize, p.y + cellSize * 0.5);
+                ctx.lineTo(p.x + cellSize, p.y + 1.5 * cellSize);
+                ctx.lineTo(p.x, p.y + 2 * cellSize);
+                ctx.closePath();
+                ctx.fillStyle = 'rgba(102, 126, 234, 0.7)';
+                ctx.fill();
+                ctx.strokeStyle = '#4a5fc1';
+                ctx.stroke();
+            });
+        }
+
+        // Draw orthogonal view for print
+        function drawOrthogonalView(canvas, piece, viewType) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const gridSize = 6;
+
+            ctx.clearRect(0, 0, w, h);
+
+            const scale = Math.min((w * 0.85) / gridSize, (h * 0.85) / gridSize);
+            const offsetX = (w - gridSize * scale) / 2;
+            const offsetY = (h - gridSize * scale) / 2;
+
+            // Draw grid
+            ctx.strokeStyle = '#d0d8e0';
+            ctx.lineWidth = 1;
+
+            for (let i = 0; i <= gridSize; i++) {
+                ctx.beginPath();
+                ctx.moveTo(offsetX + i * scale, offsetY);
+                ctx.lineTo(offsetX + i * scale, offsetY + gridSize * scale);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(offsetX, offsetY + i * scale);
+                ctx.lineTo(offsetX + gridSize * scale, offsetY + i * scale);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = '#95a5a6';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(offsetX, offsetY, gridSize * scale, gridSize * scale);
+
+            // Project voxels
+            const allVoxels = getAllVoxels(piece);
+            const projected = new Set();
+
+            if (viewType === 'front') {
+                allVoxels.forEach(([x, y, z]) => projected.add(`${x},${y}`));
+                ctx.fillStyle = 'rgba(102, 126, 234, 0.6)';
+                ctx.strokeStyle = '#4a5fc1';
+                ctx.lineWidth = 2;
+                projected.forEach(key => {
+                    const [x, y] = key.split(',').map(Number);
+                    const px = offsetX + x * scale;
+                    const py = offsetY + (gridSize - 1 - y) * scale;
+                    ctx.fillRect(px, py, scale, scale);
+                    ctx.strokeRect(px, py, scale, scale);
+                });
+            } else if (viewType === 'top') {
+                allVoxels.forEach(([x, y, z]) => projected.add(`${x},${z}`));
+                ctx.fillStyle = 'rgba(240, 147, 251, 0.6)';
+                ctx.strokeStyle = '#d66fe8';
+                ctx.lineWidth = 2;
+                projected.forEach(key => {
+                    const [x, z] = key.split(',').map(Number);
+                    const px = offsetX + x * scale;
+                    const py = offsetY + z * scale;
+                    ctx.fillRect(px, py, scale, scale);
+                    ctx.strokeRect(px, py, scale, scale);
+                });
+            } else if (viewType === 'side') {
+                allVoxels.forEach(([x, y, z]) => projected.add(`${z},${y}`));
+                ctx.fillStyle = 'rgba(79, 172, 254, 0.6)';
+                ctx.strokeStyle = '#3a8ed1';
+                ctx.lineWidth = 2;
+                projected.forEach(key => {
+                    const [z, y] = key.split(',').map(Number);
+                    const px = offsetX + z * scale;
+                    const py = offsetY + (gridSize - 1 - y) * scale;
+                    ctx.fillRect(px, py, scale, scale);
+                    ctx.strokeRect(px, py, scale, scale);
+                });
+            }
+        }
+
+        // CORRECCIÓN COMPLETA: Función para renderizar líneas ortogonales en impresión
+        function renderOrthogonalLines(ctx, lines, canvasWidth, canvasHeight) {
+            const viewColors = {
+                front: '#667eea',
+                top: '#f093fb',
+                side: '#4facfe'
+            };
+
+            const gridSize = 6;
+            // Calcular tamaño de celda basado en el canvas de impresión
+            const cellSize = Math.min((canvasWidth * 0.85) / gridSize, (canvasHeight * 0.85) / gridSize);
+            const offsetX = (canvasWidth - gridSize * cellSize) / 2;
+            const offsetY = (canvasHeight - gridSize * cellSize) / 2;
+
+            // Primero dibujar la retícula base
+            ctx.strokeStyle = '#d0d8e0';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([]);
+
+            // Dibujar líneas de la retícula
+            for (let i = 0; i <= gridSize; i++) {
+                // Líneas verticales
+                ctx.beginPath();
+                ctx.moveTo(offsetX + i * cellSize, offsetY);
+                ctx.lineTo(offsetX + i * cellSize, offsetY + gridSize * cellSize);
+                ctx.stroke();
+
+                // Líneas horizontales
+                ctx.beginPath();
+                ctx.moveTo(offsetX, offsetY + i * cellSize);
+                ctx.lineTo(offsetX + gridSize * cellSize, offsetY + i * cellSize);
+                ctx.stroke();
+            }
+
+            // Dibujar borde de la retícula
+            ctx.strokeStyle = '#95a5a6';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(offsetX, offsetY, gridSize * cellSize, gridSize * cellSize);
+
+            // Ahora dibujar las líneas del estudiante
+            lines.forEach(line => {
+                if (line.state === 0) return; // Saltar líneas no dibujadas
+
+                const color = viewColors[line.view] || '#667eea';
+                
+                // Calcular coordenadas basadas en la posición de la grilla y el nuevo tamaño
+                let x1, y1, x2, y2;
+                
+                if (line.view === 'front') {
+                    if (line.type === 'h') {
+                        // Línea horizontal en vista frontal
+                        x1 = offsetX + line.grid[0] * cellSize;
+                        y1 = offsetY + line.grid[1] * cellSize;
+                        x2 = offsetX + (line.grid[0] + 1) * cellSize;
+                        y2 = y1;
+                    } else if (line.type === 'v') {
+                        // Línea vertical en vista frontal
+                        x1 = offsetX + line.grid[0] * cellSize;
+                        y1 = offsetY + line.grid[1] * cellSize;
+                        x2 = x1;
+                        y2 = offsetY + (line.grid[1] + 1) * cellSize;
+                    }
+                } else if (line.view === 'top') {
+                    if (line.type === 'h') {
+                        // Línea horizontal en vista superior
+                        x1 = offsetX + line.grid[0] * cellSize;
+                        y1 = offsetY + line.grid[1] * cellSize;
+                        x2 = offsetX + (line.grid[0] + 1) * cellSize;
+                        y2 = y1;
+                    } else if (line.type === 'v') {
+                        // Línea vertical en vista superior
+                        x1 = offsetX + line.grid[0] * cellSize;
+                        y1 = offsetY + line.grid[1] * cellSize;
+                        x2 = x1;
+                        y2 = offsetY + (line.grid[1] + 1) * cellSize;
+                    }
+                } else if (line.view === 'side') {
+                    if (line.type === 'h') {
+                        // Línea horizontal en vista lateral
+                        x1 = offsetX + line.grid[0] * cellSize;
+                        y1 = offsetY + line.grid[1] * cellSize;
+                        x2 = offsetX + (line.grid[0] + 1) * cellSize;
+                        y2 = y1;
+                    } else if (line.type === 'v') {
+                        // Línea vertical en vista lateral
+                        x1 = offsetX + line.grid[0] * cellSize;
+                        y1 = offsetY + line.grid[1] * cellSize;
+                        x2 = x1;
+                        y2 = offsetY + (line.grid[1] + 1) * cellSize;
+                    }
+                }
+
+                // Aplicar estilo según el estado de la línea
+                if (line.state === 1) {
+                    // Línea sólida
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([]);
+                } else if (line.state === 2) {
+                    // Línea punteada
+                    ctx.strokeStyle = color;
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([8, 4]);
+                }
+
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+
+                // Dibujar puntos en los extremos
+                if (line.state > 0) {
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(x1, y1, 4, 0, Math.PI * 2);
+                    ctx.arc(x2, y2, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+            
+            ctx.setLineDash([]);
+        }
+
+        // Print PDF function
+        function printPDF() {
+            if (!selectedStudent) {
+                alert('Por favor selecciona un estudiante antes de generar el PDF.');
+                return;
+            }
+
+            console.log('Generating print pages...');
+
+            // Save current work first
+            if (gameManager && gameManager.game) {
+                gameManager.game.saveCurrentWork();
+            }
+
+            try {
+                // Generate all 40 pages
+                generatePrintPages();
+
+                console.log('Pages generated, rendering canvases...');
+
+                // Render all canvases
+                setTimeout(() => {
+                    try {
+                        renderPrintCanvases();
+                        console.log('Canvases rendered, triggering print...');
+
+                        // Trigger print after rendering
+                        setTimeout(() => {
+                            window.print();
+                        }, 500);
+                    } catch (error) {
+                        console.error('Error rendering canvases:', error);
+                        alert('Error al renderizar los canvas: ' + error.message);
+                    }
+                }, 100);
+            } catch (error) {
+                console.error('Error generating pages:', error);
+                alert('Error al generar las páginas: ' + error.message);
+            }
+        }
+
+        // ============================================
+        // START THE GAME
+        // ============================================
+
+        const gameManager = new GameManager();
+
+        // Initialize student dropdown when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            initStudentDropdown();
+        });
+    </script>
+</body>
+</html>
