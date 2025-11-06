@@ -26,33 +26,23 @@
             font-style: normal;
         }
 
-        /* === FONDO ANIMADO LOST WOODS ESTILO ZELDA === */
-        @keyframes subtleGlow {
-            0% { filter: brightness(1); opacity: 0.7; }
-            50% { filter: brightness(1.2); opacity: 0.9; }
-            100% { filter: brightness(1); opacity: 0.7; }
+        /* === FONDO LOST WOODS ESTILO ZELDA ALTTP - VISTA DE PÁJARO PIXELADA === */
+        @keyframes treesSway {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(1px, -1px); }
+            50% { transform: translate(0, 1px); }
+            75% { transform: translate(-1px, 0); }
         }
 
-        @keyframes mistMove1 {
-            0% { background-position: 0% 0%, 0% 0%, 0% 0%; }
-            100% { background-position: 100% 100%, -50% 50%, 150% -50%; }
+        @keyframes mistFloat {
+            0% { transform: translate(0, 0); opacity: 0.3; }
+            50% { transform: translate(20px, -10px); opacity: 0.5; }
+            100% { transform: translate(0, 0); opacity: 0.3; }
         }
 
-        @keyframes mistMove2 {
-            0% { background-position: 100% 0%, 50% 50%; }
-            100% { background-position: 0% 100%, -50% -50%; }
-        }
-
-        @keyframes treesScroll {
-            0% { transform: translateX(0) translateY(0); }
-            100% { transform: translateX(-25%) translateY(2%); }
-        }
-
-        @keyframes leavesFloat {
-            0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.6; }
-            90% { opacity: 0.4; }
-            100% { transform: translateY(100vh) translateX(30px) rotate(360deg); opacity: 0; }
+        @keyframes leavesPattern {
+            0% { background-position: 0 0; }
+            100% { background-position: 32px 32px; }
         }
 
         body {
@@ -61,10 +51,10 @@
             font-size: 1.25rem;
             line-height: 1.6;
             margin: 0;
-            background-color: #0a1508;
+            background-color: #307850;
         }
 
-        /* Contenedor de fondo */
+        /* Contenedor de fondo - VISTA DE PÁJARO */
         .background-container {
             position: fixed;
             top: 0;
@@ -73,47 +63,100 @@
             height: 100%;
             z-index: -10;
             overflow: hidden;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            /* Base de césped verde estilo SNES */
             background:
-                radial-gradient(ellipse at 50% 20%, #1a3d1a 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 60%, #0f2d0f 0%, transparent 40%),
-                radial-gradient(ellipse at 20% 80%, #132b13 0%, transparent 45%),
-                linear-gradient(180deg, #16311a 0%, #0d2010 40%, #0a1508 100%);
+                /* Textura de césped pixelada */
+                repeating-linear-gradient(0deg,
+                    transparent, transparent 4px,
+                    rgba(72, 120, 80, 0.3) 4px, rgba(72, 120, 80, 0.3) 8px),
+                repeating-linear-gradient(90deg,
+                    transparent, transparent 4px,
+                    rgba(80, 136, 88, 0.3) 4px, rgba(80, 136, 88, 0.3) 8px),
+                /* Patrón de césped */
+                repeating-conic-gradient(from 45deg at 2px 2px,
+                    #50A850 0deg 90deg,
+                    #60B860 90deg 180deg,
+                    #50A850 180deg 270deg,
+                    #489048 270deg 360deg),
+                /* Color base */
+                linear-gradient(180deg, #489048 0%, #388838 100%);
+            background-size: 8px 8px, 8px 8px, 4px 4px, 100% 100%;
+            animation: leavesPattern 4s linear infinite;
         }
 
-        /* Capa de arbustos densos en el fondo */
+        /* Camino de tierra - VISTA DE PÁJARO con perspectiva */
+        .path {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background:
+                /* Sombras del camino */
+                linear-gradient(90deg,
+                    transparent 20%,
+                    rgba(0, 0, 0, 0.3) 30%,
+                    transparent 31%,
+                    transparent 69%,
+                    rgba(0, 0, 0, 0.3) 70%,
+                    transparent 80%),
+                /* Textura del camino */
+                repeating-linear-gradient(0deg,
+                    #906020 0px, #906020 2px,
+                    #A86830 2px, #A86830 4px,
+                    #805018 4px, #805018 6px),
+                repeating-linear-gradient(90deg,
+                    transparent 0px, transparent 3px,
+                    rgba(112, 72, 24, 0.4) 3px, rgba(112, 72, 24, 0.4) 6px),
+                /* Base del camino */
+                linear-gradient(180deg,
+                    #A86830 0%,
+                    #986028 50%,
+                    #805018 100%);
+            clip-path: polygon(
+                35% 0%, 65% 0%,
+                80% 100%, 20% 100%
+            );
+            opacity: 0.95;
+        }
+
+        /* Árboles/arbustos - VISTA DE PÁJARO (copas vistas desde arriba) */
         .forest-edge {
             position: absolute;
-            width: 200%;
-            height: 200%;
-            top: -50%;
-            left: -50%;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            /* Árboles como círculos/óvalos vistos desde arriba */
             background:
-                /* Arbustos grandes lejanos */
-                radial-gradient(ellipse 80px 100px at 15% 75%, #0d2415 0%, transparent 60%),
-                radial-gradient(ellipse 100px 130px at 35% 70%, #0a1e10 0%, transparent 65%),
-                radial-gradient(ellipse 70px 90px at 55% 78%, #0e2618 0%, transparent 58%),
-                radial-gradient(ellipse 90px 110px at 75% 72%, #0b1f12 0%, transparent 62%),
-                radial-gradient(ellipse 85px 105px at 90% 76%, #0c2214 0%, transparent 60%),
-                /* Arbustos medianos */
-                radial-gradient(ellipse 60px 75px at 25% 65%, #102818 0%, transparent 55%),
-                radial-gradient(ellipse 65px 80px at 48% 68%, #0d2315 0%, transparent 57%),
-                radial-gradient(ellipse 70px 85px at 68% 66%, #0f2617 0%, transparent 56%),
-                radial-gradient(ellipse 55px 70px at 82% 69%, #0e2516 0%, transparent 54%),
-                /* Arbustos pequeños cercanos */
-                radial-gradient(ellipse 45px 60px at 12% 82%, #0a1d0f 0%, transparent 50%),
-                radial-gradient(ellipse 50px 65px at 38% 85%, #0c2012 0%, transparent 52%),
-                radial-gradient(ellipse 48px 62px at 62% 83%, #0b1f11 0%, transparent 51%),
-                radial-gradient(ellipse 52px 67px at 88% 86%, #0d2214 0%, transparent 53%);
-            background-size:
-                200px 200px, 250px 250px, 180px 180px, 220px 220px, 210px 210px,
-                150px 150px, 160px 160px, 170px 170px, 140px 140px,
-                120px 120px, 130px 130px, 125px 125px, 135px 135px;
-            background-repeat: repeat;
-            animation: treesScroll 60s linear infinite;
-            opacity: 0.9;
+                /* Fila superior de árboles */
+                radial-gradient(circle 40px at 10% 15%, #005000 0%, #005000 65%, transparent 65%),
+                radial-gradient(circle 35px at 25% 10%, #087820 0%, #087820 65%, rgba(0, 0, 0, 0.4) 66%, transparent 70%),
+                radial-gradient(circle 45px at 45% 8%, #006010 0%, #006010 65%, transparent 65%),
+                radial-gradient(circle 38px at 65% 12%, #087820 0%, #087820 65%, rgba(0, 0, 0, 0.4) 66%, transparent 70%),
+                radial-gradient(circle 42px at 85% 18%, #005000 0%, #005000 65%, transparent 65%),
+                radial-gradient(circle 36px at 95% 10%, #006010 0%, #006010 65%, transparent 65%),
+                /* Fila media izquierda */
+                radial-gradient(circle 44px at 5% 45%, #005000 0%, #005000 65%, rgba(0, 0, 0, 0.4) 66%, transparent 70%),
+                radial-gradient(circle 40px at 15% 55%, #087820 0%, #087820 65%, transparent 65%),
+                radial-gradient(circle 38px at 8% 70%, #006010 0%, #006010 65%, rgba(0, 0, 0, 0.4) 66%, transparent 70%),
+                radial-gradient(circle 35px at 12% 85%, #005000 0%, #005000 65%, transparent 65%),
+                /* Fila media derecha */
+                radial-gradient(circle 46px at 95% 48%, #006010 0%, #006010 65%, rgba(0, 0, 0, 0.4) 66%, transparent 70%),
+                radial-gradient(circle 39px at 88% 62%, #087820 0%, #087820 65%, transparent 65%),
+                radial-gradient(circle 42px at 93% 78%, #005000 0%, #005000 65%, rgba(0, 0, 0, 0.4) 66%, transparent 70%),
+                radial-gradient(circle 37px at 90% 92%, #006010 0%, #006010 65%, transparent 65%),
+                /* Fila inferior */
+                radial-gradient(circle 40px at 30% 95%, #087820 0%, #087820 65%, transparent 65%),
+                radial-gradient(circle 43px at 50% 98%, #005000 0%, #005000 65%, rgba(0, 0, 0, 0.4) 66%, transparent 70%),
+                radial-gradient(circle 38px at 70% 96%, #006010 0%, #006010 65%, transparent 65%);
+            animation: treesSway 6s ease-in-out infinite;
         }
 
-        /* Árboles altos en silueta */
+        /* Árboles grandes centrales que enmarcan el contenido */
         .trees-near {
             position: absolute;
             width: 100%;
@@ -121,33 +164,31 @@
             top: 0;
             left: 0;
             background:
-                /* Troncos oscuros */
-                linear-gradient(180deg, transparent 0%, transparent 60%, #050d08 61%, #050d08 100%) 5% 0 / 3% 100% no-repeat,
-                linear-gradient(180deg, transparent 0%, transparent 55%, #040c07 56%, #040c07 100%) 12% 0 / 2.5% 100% no-repeat,
-                linear-gradient(180deg, transparent 0%, transparent 50%, #060e09 51%, #060e09 100%) 89% 0 / 3.5% 100% no-repeat,
-                linear-gradient(180deg, transparent 0%, transparent 58%, #050d08 59%, #050d08 100%) 95% 0 / 2.8% 100% no-repeat,
-                /* Copas de árboles */
-                radial-gradient(ellipse 120px 280px at 5% 50%, #0a1e12 0%, transparent 70%),
-                radial-gradient(ellipse 100px 240px at 12% 45%, #081a0f 0%, transparent 68%),
-                radial-gradient(ellipse 140px 300px at 89% 48%, #0c2215 0%, transparent 72%),
-                radial-gradient(ellipse 110px 260px at 95% 43%, #0a1f13 0%, transparent 69%);
-            opacity: 1;
-            pointer-events: none;
+                /* Árbol grande izquierda superior */
+                radial-gradient(ellipse 80px 90px at 8% 25%, #003800 0%, #003800 70%, rgba(0, 0, 0, 0.5) 71%, transparent 75%),
+                radial-gradient(ellipse 65px 70px at 10% 27%, #005000 0%, #005000 60%, transparent 60%),
+                /* Árbol grande derecha superior */
+                radial-gradient(ellipse 85px 95px at 92% 28%, #003800 0%, #003800 70%, rgba(0, 0, 0, 0.5) 71%, transparent 75%),
+                radial-gradient(ellipse 68px 75px at 90% 30%, #005000 0%, #005000 60%, transparent 60%),
+                /* Árbol grande izquierda inferior */
+                radial-gradient(ellipse 75px 85px at 6% 75%, #003800 0%, #003800 70%, rgba(0, 0, 0, 0.5) 71%, transparent 75%),
+                radial-gradient(ellipse 60px 68px at 8% 77%, #087820 0%, #087820 60%, transparent 60%),
+                /* Árbol grande derecha inferior */
+                radial-gradient(ellipse 78px 88px at 94% 72%, #003800 0%, #003800 70%, rgba(0, 0, 0, 0.5) 71%, transparent 75%),
+                radial-gradient(ellipse 63px 71px at 92% 74%, #087820 0%, #087820 60%, transparent 60%);
         }
 
-        /* Niebla mística multicapa */
+        /* Niebla/luz pixelada sutil */
         .mist-effect {
             position: absolute;
-            top: -10%;
-            left: -10%;
-            width: 120%;
-            height: 120%;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background:
-                radial-gradient(ellipse at 60% 30%, rgba(140, 180, 140, 0.15) 0%, transparent 45%),
-                radial-gradient(ellipse at 30% 60%, rgba(120, 160, 120, 0.12) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 50%, rgba(100, 140, 100, 0.1) 0%, transparent 48%);
-            animation: mistMove1 35s ease-in-out infinite alternate;
-            opacity: 0.8;
+                radial-gradient(ellipse at 50% 30%, rgba(200, 230, 200, 0.08) 0%, transparent 40%),
+                radial-gradient(ellipse at 30% 60%, rgba(180, 220, 180, 0.06) 0%, transparent 35%);
+            animation: mistFloat 8s ease-in-out infinite;
             pointer-events: none;
         }
 
@@ -158,41 +199,9 @@
             width: 100%;
             height: 100%;
             background:
-                radial-gradient(ellipse at 40% 70%, rgba(160, 200, 160, 0.08) 0%, transparent 55%),
-                radial-gradient(ellipse at 70% 40%, rgba(140, 180, 140, 0.1) 0%, transparent 50%);
-            animation: mistMove2 28s ease-in-out infinite alternate-reverse;
-            opacity: 0.7;
+                radial-gradient(ellipse at 70% 50%, rgba(190, 225, 190, 0.07) 0%, transparent 38%);
+            animation: mistFloat 10s ease-in-out infinite reverse;
             pointer-events: none;
-        }
-
-        /* Camino de tierra con textura */
-        .path {
-            position: absolute;
-            width: 30%;
-            height: 100%;
-            top: 0;
-            left: 35%;
-            background:
-                /* Textura del camino */
-                repeating-linear-gradient(90deg,
-                    #3d4f38 0px, #3d4f38 2px,
-                    #3a4b35 2px, #3a4b35 4px),
-                repeating-linear-gradient(0deg,
-                    #384734 0px, #384734 2px,
-                    #354431 2px, #354431 4px),
-                linear-gradient(180deg,
-                    #4a5f45 0%,
-                    #3d5038 25%,
-                    #344530 60%,
-                    #2a3928 85%,
-                    #1f2b1e 100%
-                );
-            clip-path: polygon(
-                45% 0%, 55% 0%,
-                75% 100%, 25% 100%
-            );
-            opacity: 0.5;
-            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.6);
         }
 
         /* Container principal por encima del fondo */
