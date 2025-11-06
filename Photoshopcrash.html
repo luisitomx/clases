@@ -26,49 +26,328 @@
             font-style: normal;
         }
 
+        /* === FONDO ANIMADO LOST WOODS === */
         body {
-            background-image:
-                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(80, 200, 120, 0.03) 2px, rgba(80, 200, 120, 0.03) 4px),
-                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(80, 200, 120, 0.03) 2px, rgba(80, 200, 120, 0.03) 4px);
-            background-size: 100% 100%;
+            position: relative;
+            overflow-x: hidden;
             font-size: 1.25rem;
             line-height: 1.6;
         }
 
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -5;
+            background: linear-gradient(180deg, #1a2f0f 0%, #2D5016 40%, #1a3310 100%);
+        }
+
+        /* Capa de árboles del fondo */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            z-index: -4;
+            background-image:
+                /* Árboles lejanos */
+                radial-gradient(ellipse 40px 120px at 10% 70%, #0f2008 0%, transparent 70%),
+                radial-gradient(ellipse 50px 140px at 25% 65%, #0f2008 0%, transparent 70%),
+                radial-gradient(ellipse 45px 130px at 45% 68%, #0f2008 0%, transparent 70%),
+                radial-gradient(ellipse 55px 150px at 65% 63%, #0f2008 0%, transparent 70%),
+                radial-gradient(ellipse 48px 135px at 85% 67%, #0f2008 0%, transparent 70%),
+                radial-gradient(ellipse 42px 125px at 95% 69%, #0f2008 0%, transparent 70%);
+            animation: treesMove 60s linear infinite;
+        }
+
+        @keyframes treesMove {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Niebla animada */
+        .fog-layer {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -3;
+            pointer-events: none;
+        }
+
+        .fog-layer::before,
+        .fog-layer::after {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(200, 220, 200, 0.15) 0%, transparent 70%);
+        }
+
+        .fog-layer::before {
+            animation: fogMove1 20s ease-in-out infinite;
+        }
+
+        .fog-layer::after {
+            animation: fogMove2 25s ease-in-out infinite;
+            animation-delay: -10s;
+        }
+
+        @keyframes fogMove1 {
+            0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.3; }
+            50% { transform: translateX(0) translateY(-20px); opacity: 0.6; }
+        }
+
+        @keyframes fogMove2 {
+            0%, 100% { transform: translateX(0) translateY(10px); opacity: 0.4; }
+            50% { transform: translateX(-30%) translateY(-10px); opacity: 0.7; }
+        }
+
+        /* Animales en movimiento */
+        .animals {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        .animal {
+            position: absolute;
+            width: 20px;
+            height: 15px;
+            background: radial-gradient(ellipse at center, #3d5c2a 0%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0.6;
+        }
+
+        .animal:nth-child(1) {
+            top: 60%;
+            animation: animalMove1 15s ease-in-out infinite;
+        }
+
+        .animal:nth-child(2) {
+            top: 45%;
+            animation: animalMove2 20s ease-in-out infinite;
+            animation-delay: -5s;
+        }
+
+        .animal:nth-child(3) {
+            top: 75%;
+            animation: animalMove3 18s ease-in-out infinite;
+            animation-delay: -10s;
+        }
+
+        .animal:nth-child(4) {
+            top: 55%;
+            animation: animalMove4 22s ease-in-out infinite;
+            animation-delay: -15s;
+        }
+
+        @keyframes animalMove1 {
+            0% { left: -50px; }
+            100% { left: calc(100% + 50px); }
+        }
+
+        @keyframes animalMove2 {
+            0% { right: -50px; }
+            100% { right: calc(100% + 50px); }
+        }
+
+        @keyframes animalMove3 {
+            0% { left: -50px; }
+            50% { left: 50%; }
+            100% { left: -50px; }
+        }
+
+        @keyframes animalMove4 {
+            0% { right: -50px; }
+            50% { right: 45%; }
+            100% { right: -50px; }
+        }
+
+        /* Hojas cayendo */
+        .leaves {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .leaf {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #50C878;
+            opacity: 0.4;
+            border-radius: 0 50% 50% 50%;
+            animation: leafFall 15s linear infinite;
+        }
+
+        .leaf:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .leaf:nth-child(2) { left: 30%; animation-delay: -3s; }
+        .leaf:nth-child(3) { left: 50%; animation-delay: -7s; }
+        .leaf:nth-child(4) { left: 70%; animation-delay: -5s; }
+        .leaf:nth-child(5) { left: 90%; animation-delay: -10s; }
+
+        @keyframes leafFall {
+            0% {
+                top: -10%;
+                transform: rotate(0deg) translateX(0);
+            }
+            50% {
+                transform: rotate(180deg) translateX(20px);
+            }
+            100% {
+                top: 110%;
+                transform: rotate(360deg) translateX(0);
+            }
+        }
+
+        /* Botones de navegación estilo Zelda */
         .nav-link {
             transition: all 0.2s ease;
-            border: 3px solid #B8860B;
-            box-shadow: 0 4px 0 #0F1F08, inset 0 -2px 0 rgba(0, 0, 0, 0.3);
             position: relative;
             image-rendering: pixelated;
+            background: linear-gradient(180deg, #4169E1 0%, #2147A8 100%);
+            border: 3px solid #1C3A6E;
+            box-shadow:
+                0 4px 0 #0F1F08,
+                0 6px 12px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -2px 0 rgba(0, 0, 0, 0.3);
         }
+
+        .nav-link::before {
+            content: '►';
+            position: absolute;
+            left: 8px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            color: #FFD700;
+        }
+
         .nav-link.active {
             transform: translateY(2px);
-            box-shadow: 0 2px 0 #0F1F08, inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+            box-shadow:
+                0 2px 0 #0F1F08,
+                0 3px 8px rgba(0, 0, 0, 0.5),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.3);
             background: linear-gradient(180deg, #FFD700 0%, #B8860B 100%);
             color: #0F1F08;
             text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.3);
-        }
-        .nav-link:hover {
-            background: linear-gradient(180deg, #FFED4E 0%, #DAA520 100%);
-            color: #0F1F08;
+            border-color: #8B6914;
+            padding-left: 2rem;
         }
 
+        .nav-link.active::before {
+            opacity: 1;
+        }
+
+        .nav-link:hover {
+            background: linear-gradient(180deg, #5B8FFF 0%, #3A5FD8 100%);
+            border-color: #2147A8;
+            box-shadow:
+                0 4px 0 #0F1F08,
+                0 8px 16px rgba(0, 0, 0, 0.6),
+                0 0 20px rgba(65, 105, 225, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .nav-link:active {
+            transform: translateY(2px);
+            box-shadow:
+                0 2px 0 #0F1F08,
+                inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* === VENTANAS ESTILO ZELDA ALTTP === */
         .fundamento-btn {
             transition: all 0.2s ease;
-            border: 4px solid #FFD700;
-            box-shadow: 0 6px 0 #B8860B, 0 8px 20px rgba(0, 0, 0, 0.5);
             position: relative;
-            background: linear-gradient(135deg, #1A3310 0%, #0F1F08 100%);
+            background: linear-gradient(135deg, rgba(26, 51, 16, 0.95) 0%, rgba(15, 31, 8, 0.95) 100%);
+            border: none;
+            padding: 1.5rem;
+            overflow: visible;
         }
+
+        /* Borde exterior dorado ornamentado */
+        .fundamento-btn::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            background:
+                linear-gradient(90deg, #FFD700 0%, #B8860B 50%, #FFD700 100%);
+            border-radius: 8px;
+            z-index: -1;
+            box-shadow:
+                0 0 0 2px #0F1F08,
+                0 8px 16px rgba(0, 0, 0, 0.6),
+                inset 0 2px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        /* Borde interior con patrón */
+        .fundamento-btn::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            right: 4px;
+            bottom: 4px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 4px;
+            pointer-events: none;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Esquinas ornamentadas */
+        .fundamento-btn h3::before,
+        .fundamento-btn h3::after {
+            content: '◆';
+            color: #FFD700;
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+
+        .fundamento-btn h3::before {
+            margin-right: 0.5rem;
+        }
+
+        .fundamento-btn h3::after {
+            margin-left: 0.5rem;
+        }
+
         .fundamento-btn:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 0 #B8860B, 0 12px 30px rgba(255, 215, 0, 0.4);
-            border-color: #FFED4E;
+            background: linear-gradient(135deg, rgba(26, 51, 16, 1) 0%, rgba(15, 31, 8, 1) 100%);
         }
+
+        .fundamento-btn:hover::before {
+            background: linear-gradient(90deg, #FFED4E 0%, #DAA520 50%, #FFED4E 100%);
+            box-shadow:
+                0 0 0 2px #0F1F08,
+                0 12px 24px rgba(0, 0, 0, 0.7),
+                0 0 30px rgba(255, 215, 0, 0.5),
+                inset 0 2px 0 rgba(255, 255, 255, 0.4);
+        }
+
         .fundamento-btn:active {
             transform: translateY(-2px);
-            box-shadow: 0 4px 0 #B8860B, 0 6px 20px rgba(255, 215, 0, 0.3);
         }
 
         .step-item {
@@ -99,17 +378,36 @@
             box-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
         }
         
+        /* Code blocks estilo terminal Zelda */
         .code-block {
-            background-color: #0F1F08;
+            position: relative;
+            background: linear-gradient(135deg, rgba(15, 31, 8, 0.95) 0%, rgba(10, 20, 5, 0.95) 100%);
             color: #50C878;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 3px solid #FFD700;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 4px solid #FFD700;
             overflow-x: auto;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.9em;
+            font-family: 'VT323', monospace;
+            font-size: 1.1em;
             max-height: 500px;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 0 #B8860B;
+            box-shadow:
+                0 0 0 2px #0F1F08,
+                inset 0 4px 12px rgba(0, 0, 0, 0.7),
+                0 8px 16px rgba(0, 0, 0, 0.6);
+        }
+
+        .code-block::before {
+            content: '< CODE >';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(180deg, #FFD700 0%, #B8860B 100%);
+            color: #0F1F08;
+            padding: 2px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         h1, h2, h3, h4 {
@@ -182,6 +480,30 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             filter: drop-shadow(2px 2px 0 #0F1F08) drop-shadow(3px 3px 0 rgba(184, 134, 11, 0.5));
+            position: relative;
+            display: inline-block;
+        }
+
+        header h1::before,
+        header h1::after {
+            content: '▲';
+            position: relative;
+            color: #FFD700;
+            font-size: 0.5em;
+            text-shadow: 2px 2px 0 #0F1F08, 0 0 10px rgba(255, 215, 0, 0.8);
+            margin: 0 1rem;
+        }
+
+        header {
+            position: relative;
+            background: linear-gradient(135deg, rgba(26, 51, 16, 0.7) 0%, rgba(15, 31, 8, 0.7) 100%);
+            border: 4px solid #FFD700;
+            border-radius: 12px;
+            padding: 2rem !important;
+            box-shadow:
+                0 0 0 2px #0F1F08,
+                0 8px 24px rgba(0, 0, 0, 0.6),
+                inset 0 2px 8px rgba(0, 0, 0, 0.5);
         }
 
         code {
@@ -197,28 +519,79 @@
             text-shadow: 1px 1px 0 #0F1F08;
         }
 
-        /* Efecto de brillo en hover para cards */
+        /* Cajas de contenido estilo ventanas Zelda */
         .bg-brand-card {
             position: relative;
-            overflow: hidden;
+            overflow: visible !important;
+            background: linear-gradient(135deg, rgba(26, 51, 16, 0.92) 0%, rgba(15, 31, 8, 0.92) 100%) !important;
+            backdrop-filter: blur(2px);
+            border: none !important;
+            box-shadow: none !important;
         }
 
+        /* Marco exterior dorado decorativo */
         .bg-brand-card::before {
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.1), transparent);
-            transform: rotate(45deg);
-            transition: all 0.5s ease;
-            opacity: 0;
+            top: -6px;
+            left: -6px;
+            right: -6px;
+            bottom: -6px;
+            background:
+                repeating-linear-gradient(90deg,
+                    #FFD700 0px, #FFD700 8px,
+                    #B8860B 8px, #B8860B 12px,
+                    #FFD700 12px, #FFD700 16px,
+                    #8B6914 16px, #8B6914 18px
+                ),
+                linear-gradient(135deg, #FFD700, #B8860B);
+            background-size: 18px 100%, 100% 100%;
+            border-radius: 12px;
+            z-index: -1;
+            box-shadow:
+                0 0 0 3px #0F1F08,
+                0 0 0 5px #FFD700,
+                0 12px 24px rgba(0, 0, 0, 0.7),
+                inset 0 2px 1px rgba(255, 255, 255, 0.4);
         }
 
+        /* Marco interior con sombra interna */
+        .bg-brand-card::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 2px solid rgba(255, 215, 0, 0.25);
+            border-radius: 4px;
+            pointer-events: none;
+            box-shadow:
+                inset 0 4px 12px rgba(0, 0, 0, 0.6),
+                inset 0 -2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Esquinas decorativas */
+        .bg-brand-card {
+            padding: 2rem !important;
+        }
+
+        /* Efecto hover sutil */
         .bg-brand-card:hover::before {
-            opacity: 1;
-            animation: shine 2s infinite;
+            background:
+                repeating-linear-gradient(90deg,
+                    #FFED4E 0px, #FFED4E 8px,
+                    #DAA520 8px, #DAA520 12px,
+                    #FFED4E 12px, #FFED4E 16px,
+                    #B8860B 16px, #B8860B 18px
+                ),
+                linear-gradient(135deg, #FFED4E, #DAA520);
+            box-shadow:
+                0 0 0 3px #0F1F08,
+                0 0 0 5px #FFED4E,
+                0 12px 24px rgba(0, 0, 0, 0.7),
+                0 0 40px rgba(255, 215, 0, 0.6),
+                inset 0 2px 1px rgba(255, 255, 255, 0.5);
         }
 
         @keyframes shine {
@@ -258,6 +631,22 @@
     </script>
 </head>
 <body class="bg-brand-bg text-brand-text font-sans antialiased">
+
+    <!-- Capas de animación Lost Woods -->
+    <div class="fog-layer"></div>
+    <div class="animals">
+        <div class="animal"></div>
+        <div class="animal"></div>
+        <div class="animal"></div>
+        <div class="animal"></div>
+    </div>
+    <div class="leaves">
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+    </div>
 
     <div class="container mx-auto p-4 md:p-8 max-w-7xl">
         
