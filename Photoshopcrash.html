@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Curso Didáctico de Diseño Digital</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Press+Start+2P&display=swap" rel="stylesheet">
     
     <!-- Chosen Palette: Warm Neutrals -->
     <!-- Application Structure Plan: La SPA se reorientó a la didáctica. La navegación principal ahora incluye "Fundamentos", "Plataformas" y "Automatización". El "Lander" (Inicio) es la vista por defecto. "Fundamentos" abre modales interactivos (incluyendo un nuevo zoom Píxel/Vector). "Plataformas" tiene sub-pestañas (Adobe, C. Abierto, Affinity). "C. Abierto" tiene sub-sub-pestañas anidadas (Krita/Inkscape, GIMP, Synfig). "Automatización" es una nueva sección con pestañas para ejemplos de código (Adobe, GIMP, Affinity). -->
@@ -18,30 +18,57 @@
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
     <style>
+        body {
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(80, 200, 120, 0.03) 2px, rgba(80, 200, 120, 0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(80, 200, 120, 0.03) 2px, rgba(80, 200, 120, 0.03) 4px);
+            background-size: 100% 100%;
+        }
+
         .nav-link {
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            border: 3px solid #B8860B;
+            box-shadow: 0 4px 0 #0F1F08, inset 0 -2px 0 rgba(0, 0, 0, 0.3);
+            position: relative;
+            image-rendering: pixelated;
         }
         .nav-link.active {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #0F1F08, inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+            background: linear-gradient(180deg, #FFD700 0%, #B8860B 100%);
+            color: #0F1F08;
+            text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.3);
         }
-        
+        .nav-link:hover {
+            background: linear-gradient(180deg, #FFED4E 0%, #DAA520 100%);
+            color: #0F1F08;
+        }
+
         .fundamento-btn {
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            border: 4px solid #FFD700;
+            box-shadow: 0 6px 0 #B8860B, 0 8px 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            background: linear-gradient(135deg, #1A3310 0%, #0F1F08 100%);
         }
         .fundamento-btn:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 0 #B8860B, 0 12px 30px rgba(255, 215, 0, 0.4);
+            border-color: #FFED4E;
         }
-        
+        .fundamento-btn:active {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 0 #B8860B, 0 6px 20px rgba(255, 215, 0, 0.3);
+        }
+
         .step-item {
             position: relative;
             padding-left: 2.5rem;
             padding-bottom: 1.5rem;
-            border-left: 2px solid #B48A5A;
+            border-left: 3px solid #FFD700;
         }
         .step-item:last-child {
-            border-left: 2px solid transparent;
+            border-left: 3px solid transparent;
             padding-bottom: 0;
         }
         .step-item::before {
@@ -55,27 +82,51 @@
             width: 2rem;
             height: 2rem;
             border-radius: 9999px;
-            background-color: #B48A5A;
-            color: white;
+            background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%);
+            color: #0F1F08;
             font-weight: bold;
+            border: 2px solid #B8860B;
+            box-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
         }
         
         .code-block {
-            background-color: #2D3748; 
-            color: #E2E8F0;
+            background-color: #0F1F08;
+            color: #50C878;
             padding: 1rem;
             border-radius: 0.5rem;
+            border: 3px solid #FFD700;
             overflow-x: auto;
             font-family: 'Courier New', Courier, monospace;
             font-size: 0.9em;
-            max-height: 500px; /* Limita la altura y hace scroll */
+            max-height: 500px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 4px 0 #B8860B;
+        }
+
+        h1, h2, h3, h4 {
+            text-shadow: 2px 2px 0 #0F1F08, 3px 3px 0 rgba(184, 134, 11, 0.5);
+        }
+
+        .subnav-link, .os-subnav-link {
+            border: 2px solid currentColor;
+            transition: all 0.2s ease;
+        }
+
+        .subnav-link.active, .os-subnav-link.active {
+            background: linear-gradient(180deg, #FF6B35 0%, #C4461A 100%);
+            border-color: #8B2500;
+            box-shadow: 0 3px 0 #8B2500, inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+            transform: translateY(1px);
+        }
+
+        .subnav-link:hover, .os-subnav-link:hover {
+            background: linear-gradient(180deg, #FF8C61 0%, #E5532A 100%);
         }
 
         .zoom-container {
             position: relative;
             cursor: help;
         }
-        
+
         .zoom-magnifier {
             display: none;
             position: absolute;
@@ -83,13 +134,13 @@
             left: 105%;
             width: 128px;
             height: 128px;
-            border: 4px solid #fff;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 4px solid #FFD700;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5), 0 0 20px rgba(255, 215, 0, 0.4);
             border-radius: 0.25rem;
-            background-color: #fff;
+            background-color: #1A3310;
             z-index: 10;
         }
-        
+
         .zoom-container:hover .zoom-magnifier {
             display: block;
         }
@@ -106,12 +157,67 @@
             width: 100%;
             height: 100%;
             border-radius: 9999px;
-            background-color: #D96C5A;
-            border: 16px solid #D96C5A;
-            box-shadow: 16px 0 0 #D96C5A, -16px 0 0 #D96C5A;
+            background-color: #FF6B35;
+            border: 16px solid #FF6B35;
+            box-shadow: 16px 0 0 #FF6B35, -16px 0 0 #FF6B35;
             margin-left: -16px;
             margin-top: 16px;
             transform: scale(1.5) rotate(-45deg);
+        }
+
+        /* Estilos adicionales Zelda */
+        header h1 {
+            background: linear-gradient(180deg, #FFD700 0%, #B8860B 50%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(2px 2px 0 #0F1F08) drop-shadow(3px 3px 0 rgba(184, 134, 11, 0.5));
+        }
+
+        code {
+            background-color: #0F1F08;
+            color: #FFD700;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #B8860B;
+        }
+
+        strong {
+            color: #FFD700;
+            text-shadow: 1px 1px 0 #0F1F08;
+        }
+
+        /* Efecto de brillo en hover para cards */
+        .bg-brand-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bg-brand-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+
+        .bg-brand-card:hover::before {
+            opacity: 1;
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
         }
 
     </style>
@@ -121,15 +227,20 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['MedievalSharp', 'serif'],
+                        retro: ['Press Start 2P', 'monospace'],
                     },
                     colors: {
-                        'brand-bg': '#FFFBF0',
-                        'brand-text': '#4F4A45',
-                        'brand-primary': '#B48A5A',
-                        'brand-secondary': '#678A98',
-                        'brand-accent': '#D96C5A',
-                        'brand-card': '#FFFFFF',
+                        'brand-bg': '#2D5016',
+                        'brand-text': '#FFF8DC',
+                        'brand-primary': '#FFD700',
+                        'brand-secondary': '#4169E1',
+                        'brand-accent': '#FF6B35',
+                        'brand-card': '#1A3310',
+                        'brand-dark': '#0F1F08',
+                        'brand-light': '#50C878',
+                        'brand-gold-dark': '#B8860B',
+                        'brand-stone': '#708090',
                     }
                 }
             }
