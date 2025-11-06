@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Curso Didáctico de Diseño Digital</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     
     <!-- Chosen Palette: Warm Neutrals -->
     <!-- Application Structure Plan: La SPA se reorientó a la didáctica. La navegación principal ahora incluye "Fundamentos", "Plataformas" y "Automatización". El "Lander" (Inicio) es la vista por defecto. "Fundamentos" abre modales interactivos (incluyendo un nuevo zoom Píxel/Vector). "Plataformas" tiene sub-pestañas (Adobe, C. Abierto, Affinity). "C. Abierto" tiene sub-sub-pestañas anidadas (Krita/Inkscape, GIMP, Synfig). "Automatización" es una nueva sección con pestañas para ejemplos de código (Adobe, GIMP, Affinity). -->
@@ -18,11 +20,19 @@
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
     <style>
+        .vt323-regular {
+            font-family: "VT323", monospace;
+            font-weight: 400;
+            font-style: normal;
+        }
+
         body {
             background-image:
                 repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(80, 200, 120, 0.03) 2px, rgba(80, 200, 120, 0.03) 4px),
                 repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(80, 200, 120, 0.03) 2px, rgba(80, 200, 120, 0.03) 4px);
             background-size: 100% 100%;
+            font-size: 1.25rem;
+            line-height: 1.6;
         }
 
         .nav-link {
@@ -227,8 +237,8 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['MedievalSharp', 'serif'],
-                        retro: ['Press Start 2P', 'monospace'],
+                        sans: ['VT323', 'monospace'],
+                        retro: ['VT323', 'monospace'],
                     },
                     colors: {
                         'brand-bg': '#2D5016',
