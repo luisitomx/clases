@@ -1,0 +1,3959 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curso Didáctico de Diseño Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: La SPA se reorientó a la didáctica. La navegación principal ahora incluye "Fundamentos", "Plataformas" y "Automatización". El "Lander" (Inicio) es la vista por defecto. "Fundamentos" abre modales interactivos (incluyendo un nuevo zoom Píxel/Vector). "Plataformas" tiene sub-pestañas (Adobe, C. Abierto, Affinity). "C. Abierto" tiene sub-sub-pestañas anidadas (Krita/Inkscape, GIMP, Synfig). "Automatización" es una nueva sección con pestañas para ejemplos de código (Adobe, GIMP, Affinity). -->
+    <!-- Visualization & Content Choices: 
+        - Info: Fundamentos (Pixel, Color, etc.) -> Goal: Enseñar Concepto -> Viz/Presentation: Botones en cuadrícula (HTML/Tailwind) -> Interaction: Clic abre Modal (JS `openModal()`).
+        - Info: Píxel vs Vector (Nuevo) -> Goal: Demostrar Zoom -> Viz/Presentation: CSS Hover con "lupa" simulada (HTML/CSS) -> Interaction: Hover sobre el ejemplo muestra el zoom (CSS) -> Justification: Didáctica visual directa.
+        - Info: Flujos de Trabajo (Adobe, Krita, GIMP, Synfig, Affinity) -> Goal: Enseñar Proceso -> Viz/Presentation: Pestañas anidadas (HTML/JS) con Tutoriales paso a paso (HTML `<ol>`) -> Interaction: Clic en pestañas filtra el tutorial (JS `showSubView()`, `showOpenSourceView()`) -> Justification: Compara flujos de trabajo de forma granular.
+        - Info: Automatización (JSX, Python, Macros) -> Goal: Introducir Scripts -> Viz/Presentation: Pestañas con bloques de código (`<pre>`) (HTML/JS/CSS) -> Interaction: Clic en pestaña muestra código (JS `showAutoView()`) -> Justification: Presenta código de forma clara y contextual.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        .nav-link.active {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .fundamento-btn {
+            transition: all 0.3s ease;
+        }
+        .fundamento-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .step-item {
+            position: relative;
+            padding-left: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-left: 2px solid #B48A5A;
+        }
+        .step-item:last-child {
+            border-left: 2px solid transparent;
+            padding-bottom: 0;
+        }
+        .step-item::before {
+            content: attr(data-step);
+            position: absolute;
+            left: -1rem;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 9999px;
+            background-color: #B48A5A;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .code-block {
+            background-color: #2D3748; 
+            color: #E2E8F0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            max-height: 500px; /* Limita la altura y hace scroll */
+        }
+
+        .zoom-container {
+            position: relative;
+            cursor: help;
+        }
+        
+        .zoom-magnifier {
+            display: none;
+            position: absolute;
+            top: -20px;
+            left: 105%;
+            width: 128px;
+            height: 128px;
+            border: 4px solid #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border-radius: 0.25rem;
+            background-color: #fff;
+            z-index: 10;
+        }
+        
+        .zoom-container:hover .zoom-magnifier {
+            display: block;
+        }
+
+        .pixel-magnifier-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            width: 100%;
+            height: 100%;
+        }
+
+        .vector-magnifier-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 9999px;
+            background-color: #D96C5A;
+            border: 16px solid #D96C5A;
+            box-shadow: 16px 0 0 #D96C5A, -16px 0 0 #D96C5A;
+            margin-left: -16px;
+            margin-top: 16px;
+            transform: scale(1.5) rotate(-45deg);
+        }
+
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'brand-bg': '#FFFBF0',
+                        'brand-text': '#4F4A45',
+                        'brand-primary': '#B48A5A',
+                        'brand-secondary': '#678A98',
+                        'brand-accent': '#D96C5A',
+                        'brand-card': '#FFFFFF',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-brand-bg text-brand-text font-sans antialiased">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+        
+        <header class="text-center my-8 cursor-pointer" id="header-home">
+            <h1 class="text-4xl md:text-5xl font-bold text-brand-primary">Curso Didáctico de Diseño Digital</h1>
+            <p class="text-lg text-brand-text mt-2">De Cero a Héroe en Herramientas Creativas</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center gap-2 md:gap-4 mb-8" id="main-nav">
+            <a href="#" data-view="fundamentos" class="nav-link text-sm md:text-base font-semibold py-2 px-3 md:py-3 md:px-5 rounded-lg bg-brand-secondary text-white shadow-md">Fundamentos</a>
+            <a href="#" data-view="plataformas" class="nav-link text-sm md:text-base font-semibold py-2 px-3 md:py-3 md:px-5 rounded-lg bg-brand-card text-brand-secondary hover:bg-brand-secondary/10 shadow-sm border border-brand-secondary/20">Plataformas y Flujos</a>
+            <a href="#" data-view="automatizacion" class="nav-link text-sm md:text-base font-semibold py-2 px-3 md:py-3 md:px-5 rounded-lg bg-brand-card text-brand-secondary hover:bg-brand-secondary/10 shadow-sm border border-brand-secondary/20">Automatización</a>
+        </nav>
+
+        <main id="content-container">
+
+            <div id="view-inicio" class="content-view">
+                <div class="bg-brand-card shadow-xl rounded-lg p-6 md:p-10 max-w-4xl mx-auto">
+                    <h2 class="text-3xl font-bold text-brand-secondary mb-4">¡Bienvenidos al Curso!</h2>
+                    <p class="text-lg mb-4">Este curso intensivo está diseñado para llevar tus habilidades de diseño gráfico desde los conceptos más básicos hasta técnicas avanzadas de nivel profesional.</p>
+                    <p class="text-lg mb-4">Aquí, no solo dominaremos Photoshop, sino que también exploraremos el flujo de trabajo completo de un diseñador, integrando gráficos vectoriales, manejo y post-producción de imágenes.</p>
+                    <p class="text-lg mb-4">El objetivo: que te sientas cómodo creando arte digital complejo, optimizando tu tiempo con automatizaciones y entendiendo qué herramienta usar en cada momento.</p>
+                    <p class="text-lg mb-4">Usa la navegación superior para explorar los <strong class="text-brand-primary">Fundamentos</strong> (conceptos clave con ejemplos interactivos) o sumérgete en las <strong class="text-brand-primary">Plataformas y Flujos</strong> (tutoriales paso a paso por software).</p>
+                    <p class="text-lg font-semibold text-brand-primary">Haz clic en el encabezado en cualquier momento para volver a esta pantalla de bienvenida.</p>
+                </div>
+            </div>
+
+            <div id="view-fundamentos" class="content-view hidden">
+                <h2 class="text-3xl font-bold text-brand-secondary mb-6 text-center">Módulo 1: Fundamentos Interactivos</h2>
+                <p class="text-lg mb-6 max-w-3xl mx-auto text-center">Haz clic en cada concepto para abrir un ejemplo didáctico. El objetivo es entender el "por qué" antes del "cómo".</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                    
+                    <button class="fundamento-btn text-left bg-brand-card shadow-lg rounded-lg p-6" data-modal-title="Píxeles vs. Vectores (Interactivo)" data-modal-type="pixel-vector">
+                        <h3 class="text-2xl font-bold text-brand-primary mb-2">Píxeles vs. Vectores</h3>
+                        <p>La diferencia fundamental. Pasa el cursor sobre los ejemplos para ver el "zoom".</p>
+                    </button>
+                    
+                    <button class="fundamento-btn text-left bg-brand-card shadow-lg rounded-lg p-6" data-modal-title="Teoría del Color Digital" data-modal-type="color">
+                        <h3 class="text-2xl font-bold text-brand-primary mb-2">Teoría del Color Digital</h3>
+                        <p>Entiende el RGB para pantallas y el CMYK para impresión. Nunca más falles en la entrega de un archivo.</p>
+                    </button>
+                    
+                    <button class="fundamento-btn text-left bg-brand-card shadow-lg rounded-lg p-6" data-modal-title="Hardware Esencial" data-modal-type="hardware">
+                        <h3 class="text-2xl font-bold text-brand-primary mb-2">Hardware Esencial</h3>
+                        <p>¿Qué es una tableta gráfica y por qué la sensibilidad a la presión cambiará tu forma de dibujar?</p>
+                    </button>
+                    
+                    <button class="fundamento-btn text-left bg-brand-card shadow-lg rounded-lg p-6" data-modal-title="Composición: Regla de Tercios" data-modal-type="composicion">
+                        <h3 class="text-2xl font-bold text-brand-primary mb-2">Composición y Diseño</h3>
+                        <p>Aprende la Regla de los Tercios, la base para crear imágenes con balance e interés visual.</p>
+                    </button>
+                    
+                </div>
+            </div>
+
+            <div id="view-plataformas" class="content-view hidden">
+                <h2 class="text-3xl font-bold text-brand-secondary mb-6 text-center">Módulo 2: Flujos de Trabajo para Videojuegos</h2>
+                <p class="text-lg mb-6 max-w-3xl mx-auto text-center">Nuevo objetivo: preparar un personaje para animación en un videojuego. Exploraremos dos técnicas: <strong>animación "cut-out"</strong> (preparar partes para "rigging") y <strong>sprite sheets</strong> (animación fotograma a fotograma).</p>
+                
+                <div class="text-center mb-6 space-x-2" id="platform-nav">
+                    <button data-subview="adobe" class="subnav-link active font-semibold py-2 px-5 rounded-lg bg-brand-accent text-white shadow-md">Adobe</button>
+                    <button data-subview="abierto" class="subnav-link font-semibold py-2 px-5 rounded-lg bg-brand-card text-brand-accent hover:bg-brand-accent/10 shadow-sm border border-brand-accent/30">Código Abierto</button>
+                    <button data-subview="affinity" class="subnav-link font-semibold py-2 px-5 rounded-lg bg-brand-card text-brand-accent hover:bg-brand-accent/10 shadow-sm border border-brand-accent/30">Affinity</button>
+                </div>
+
+                <div class="bg-brand-card shadow-xl rounded-lg p-6 md:p-10 max-w-4xl mx-auto">
+                    
+                    <div id="subview-adobe" class="sub-view">
+                        <h3 class="text-2xl font-bold text-brand-accent mb-4">Flujo de Trabajo: Adobe (Photoshop + Illustrator)</h3>
+                        <p class="text-lg mb-6">Usaremos <code>Illustrator</code> para preparar un personaje "cut-out" (para rigging) y <code>Photoshop</code> para crear un "sprite sheet" (animación FxF).</p>
+                        
+                        <h4 class="text-xl font-bold text-brand-primary mb-4 mt-6">Opción 1: Sprite Sheet (Photoshop)</h4>
+                        <ol class="space-y-4">
+                            <li class="step-item" data-step="1">
+                                <h4 class="text-xl font-bold text-brand-primary">Configurar Lienzo y Línea de Tiempo</h4>
+                                <p>Abre <code>Photoshop</code> (ej. 128x128px para pixel art, o 1024x1024 para HD). Ve a <code>Ventana > Línea de tiempo</code> y haz clic en "Crear animación de fotogramas".</p>
+                            </li>
+                            <li class="step-item" data-step="2">
+                                <h4 class="text-xl font-bold text-brand-primary">Dibujar Fotograma 1 (Pose Quieta)</h4>
+                                <p>Dibuja tu personaje en la pose inicial. Cada parte principal (brazo, cabeza) debería estar en su propia capa para facilitar.</p>
+                            </li>
+                            <li class="step-item" data-step="3">
+                                <h4 class="text-xl font-bold text-brand-primary">Animar (Ciclo de Caminado)</h4>
+                                <p>En la línea de tiempo, haz clic en "Duplicar fotograma". En este nuevo fotograma (nº 2), mueve las capas del brazo/pierna a la siguiente pose. Activa "Papel cebolla" (Onion Skin) en los ajustes de la línea de tiempo para ver el fotograma anterior. Repite para 4-8 fotogramas hasta completar el ciclo.</p>
+                            </li>
+                            <li class="step-item" data-step="4">
+                                <h4 class="text-xl font-bold text-brand-primary">Ensamblar el Sprite Sheet</h4>
+                                <p>Ve a <code>Imagen > Tamaño de lienzo...</code> y multiplica el ancho por el número de fotogramas (ej. 128px de ancho * 4 fotogramas = 512px de ancho).</p>
+                            </li>
+                            <li class="step-item" data-step="5">
+                                <h4 class="text-xl font-bold text-brand-primary">Exportar</h4>
+                                <p>Selecciona cada fotograma en la línea de tiempo, selecciona todas sus capas y muévelas a su posición en la cuadrícula (fotograma 1 a la izquierda, fotograma 2 al lado, etc.). Oculta todas las capas menos las del "sprite sheet" final y ve a <code>Archivo > Exportar > Exportar como... (PNG)</code>.</p>
+                            </li>
+                        </ol>
+                        
+                        <h4 class="text-xl font-bold text-brand-primary mb-4 mt-8 pt-4 border-t border-brand-primary/20">Opción 2: Partes "Cut-out" (Illustrator)</h4>
+                         <ol class="space-y-4">
+                            <li class="step-item" data-step="1">
+                                <h4 class="text-xl font-bold text-brand-primary">Diseñar por Partes</h4>
+                                <p>En <code>Illustrator</code>, dibuja tu personaje, pero cada parte móvil (cabeza, torso, brazo_L, antebrazo_L, pierna_R, etc.) debe ser un <strong>objeto vectorial separado</strong>.</p>
+                            </li>
+                            <li class="step-item" data-step="2">
+                                <h4 class="text-xl font-bold text-brand-primary">Organizar en Capas</h4>
+                                <p>Abre el panel <code>Capas</code>. Nombra cada objeto de forma clara (ej. "cabeza", "brazo_izq"). Esto es <strong>crítico</strong> para que el motor de juego (Unity, Godot) o software de rigging (Spine) lo reconozca.</p>
+                            </li>
+                            <li class="step-item" data-step="3">
+                                <h4 class="text-xl font-bold text-brand-primary">Exportar (Mesa de Trabajo)</h4>
+                                <p>Usa la <code>Herramienta Mesa de trabajo (Shift+O)</code>. Arrastra una nueva mesa de trabajo alrededor de cada parte del personaje. Ve a <code>Archivo > Exportar > Exportar para pantallas...</code>. Selecciona todas las mesas de trabajo, elige PNG y exporta. Tendrás cada parte como un archivo separado, listo para armar.</p>
+                            </li>
+                        </ol>
+                    </div>
+                    
+                    <div id="subview-abierto" class="sub-view hidden">
+                        <h3 class="text-2xl font-bold text-brand-accent mb-4">Flujo de Trabajo: Código Abierto</h3>
+                        <p class="text-lg mb-6">Usaremos <code>Krita</code> para sprite sheets FxF, e <code>Inkscape</code> + <code>Synfig</code> para animación cut-out/vectorial.</p>
+                        
+                        <div class="text-center mb-6 space-x-2 border-b border-brand-accent/20 pb-4" id="opensource-nav">
+                            <button data-subview="krita" class="os-subnav-link active font-semibold py-2 px-4 rounded-lg bg-brand-primary/10 text-brand-primary">Krita (Sprite Sheet)</button>
+                            <button data-subview="gimp" class="os-subnav-link font-semibold py-2 px-4 rounded-lg text-brand-text/70 hover:bg-brand-primary/10">GIMP (Sprite Sheet)</button>
+                            <button data-subview="synfig" class="os-subnav-link font-semibold py-2 px-4 rounded-lg text-brand-text/70 hover:bg-brand-primary/10">Inkscape + Synfig</button>
+                        </div>
+
+                        <div id="subview-abierto-krita" class="os-sub-view">
+                            <h4 class="text-xl font-bold text-brand-primary mb-4">Opción 1: Krita (Animación FxF)</h4>
+                            <p class="text-base mb-4">Krita tiene herramientas de animación FxF (fotograma a fotograma) de nivel profesional.</p>
+                            <ol class="space-y-4">
+                                <li class="step-item" data-step="1">
+                                    <h4 class="text-xl font-bold text-brand-primary">Configurar Dockers de Animación</h4>
+                                    <p>Abre <code>Krita</code>. Ve a <code>Configuración > Paneles</code> y activa "Animación" (la línea de tiempo) y "Piel de cebolla".</p>
+                                </li>
+                                <li class="step-item" data-step="2">
+                                    <h4 class="text-xl font-bold text-brand-primary">Dibujar Fotograma Clave</h4>
+                                    <p>En la línea de tiempo, selecciona el fotograma 1 en la capa "paint". Dibuja la pose inicial de tu personaje.</p>
+                                </li>
+                                <li class="step-item" data-step="3">
+                                    <h4 class="text-xl font-bold text-brand-primary">Animar con Papel Cebolla</h4>
+                                    <p>Avanza al fotograma 3 (para animar "a doses"). Haz clic derecho > "Crear fotograma en blanco". Activa el "Papel Cebolla" (icono de cebolla) para ver el fotograma anterior en rojo. Dibuja la siguiente pose. Repite hasta completar el ciclo.</p>
+                                </li>
+                                <li class="step-item" data-step="4">
+                                    <h4 class="text-xl font-bold text-brand-primary">Renderizar Sprite Sheet</h4>
+                                    <p>Cuando la animación esté lista, ve a <code>Archivo > Renderizar Animación...</code>. En el menú desplegable "Exportar como", selecciona <strong>"Sprite Sheet"</strong>. Krita lo ensamblará automáticamente por ti. Configura el número de columnas y exporta como PNG.</p>
+                                </li>
+                            </ol>
+                        </div>
+                        
+                        <div id="subview-abierto-gimp" class="os-sub-view hidden">
+                            <h4 class="text-xl font-bold text-brand-primary mb-4">Opción 2: GIMP (Capas como Fotogramas)</h4>
+                            <p class="text-base mb-4">GIMP puede crear sprite sheets, aunque es más manual que Krita.</p>
+                            <ol class="space-y-4">
+                                <li class="step-item" data-step="1">
+                                    <h4 class="text-xl font-bold text-brand-primary">Fotogramas como Capas</h4>
+                                    <p>Crea un documento (ej. 128x128px). Dibuja tu primera pose en la capa "Frame 1". Crea una capa nueva "Frame 2", baja la opacidad de "Frame 1" (para simular papel cebolla) y dibuja la siguiente pose. Repite para "Frame 3", "Frame 4", etc.</p>
+                                </li>
+                                <li class="step-item" data-step="2">
+                                    <h4 class="text-xl font-bold text-brand-primary">Ampliar Lienzo</h4>
+                                    <p>Ve a <code>Imagen > Tamaño del lienzo...</code>. Multiplica el ancho por el número de fotogramas (ej. 128px * 4 fotogramas = 512px). Asegúrate de que el lienzo se expanda hacia la derecha.</p>
+                                </li>
+                                <li class="step-item" data-step="3">
+                                    <h4 class="text-xl font-bold text-brand-primary">Alinear Capas</h4>
+                                    <p>Usa la <code>Herramienta Mover (M)</code>. Mueve "Frame 1" a la izquierda. Mueve "Frame 2" para que quede justo a la derecha de la 1. Mueve "Frame 3" al lado de la 2, y así sucesivamente.</p>
+                                </li>
+                                <li class="step-item" data-step="4">
+                                    <h4 class="text-xl font-bold text-brand-primary">Exportar</h4>
+                                    <p>Cuando todas las capas-fotogramas estén alineadas horizontalmente, ve a <code>Archivo > Exportar como...</code> y guarda como PNG.</p>
+                                </li>
+                            </ol>
+                        </div>
+
+                        <div id="subview-abierto-synfig" class="os-sub-view hidden">
+                            <h4 class="text-xl font-bold text-brand-primary mb-4">Opción 3: Inkscape (Cut-out) + Synfig (Rigging)</h4>
+                            <p class="text-base mb-4">Este es el flujo de trabajo de "rigging" vectorial 2D de código abierto.</p>
+                            <ol class="space-y-4">
+                                <li class="step-item" data-step="1">
+                                    <h4 class="text-xl font-bold text-brand-primary">Preparar Partes (Inkscape)</h4>
+                                    <p>Dibuja tu personaje en <code>Inkscape</code>. <strong>Crítico:</strong> Cada parte móvil (brazo, cabeza, ojo) debe ser un objeto o grupo separado en su propia <strong>capa nombrada</strong> (ej. "cabeza", "brazo_L").</p>
+                                </li>
+                                <li class="step-item" data-step="2">
+                                    <h4 class="text-xl font-bold text-brand-primary">Importar a Synfig</h4>
+                                    <p>Abre <code>Synfig Studio</code>. Ve a <code>Archivo > Importar</code> y selecciona tu archivo SVG. Cada capa de Inkscape será una capa en Synfig.</p>
+                                </li>
+                                <li class="step-item" data-step="3">
+                                    <h4 class="text-xl font-bold text-brand-primary">Crear Esqueleto (Huesos)</h4>
+                                    <p>Haz clic derecho > <code>Nueva Capa > Esqueleto</code>. Con la herramienta esqueleto, crea los "huesos" para tu personaje (ej. uno para el cuerpo, uno para el brazo).</p>
+                                </li>
+                                <li class="step-item" data-step="4">
+                                    <h4 class="text-xl font-bold text-brand-primary">Vincular Partes</h4>
+                                    <p>Selecciona la capa de tu "brazo" (importada). En el panel <code>Parámetros</code>, busca "Huesos" y vincúlala al hueso del brazo que creaste. Repite para todas las partes.</p>
+                                </li>
+                                <li class="step-item" data-step="5">
+                                    <h4 class="text-xl font-bold text-brand-primary">Animar (Keyframes)</h4>
+                                    <p>Activa el <strong>Modo Animación</strong> (la figura verde se vuelve roja). Ve al fotograma <code>0f</code> (cero). Mueve los huesos a la pose inicial. Ve al fotograma <code>24f</code> (1 segundo), y mueve el hueso del brazo hacia arriba (para saludar). Synfig crea la interpolación (tweening) automáticamente.</p>
+                                </li>
+                                <li class="step-item" data-step="6">
+                                    <h4 class="text-xl font-bold text-brand-primary">Renderizar Secuencia</h4>
+                                    <p>Ve a <code>Archivo > Renderizar</code>. Elige un nombre de archivo (ej. <code>walk_cycle.png</code>). Asegúrate de que el destino sea "png". Synfig exportará una <strong>secuencia de imágenes</strong> (walk_cycle.0001.png, ...0002.png) que un motor de juego puede leer.</p>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <div id="subview-affinity" class="sub-view hidden">
+                        <h3 class="text-2xl font-bold text-brand-accent mb-4">Flujo de Trabajo: Ecosistema Affinity</h3>
+                        <p class="text-lg mb-6">Usaremos <code>Affinity Designer</code> y su sistema de "Personas" para preparar partes "cut-out" de alta eficiencia, listas para un motor de juego.</p>
+                        <ol class="space-y-4">
+                            <li class="step-item" data-step="1">
+                                <h4 class="text-xl font-bold text-brand-primary">Boceto y Vectores (Designer Persona)</h4>
+                                <p>Abre <code>Affinity Designer</code>. Dibuja tu personaje. Al igual que en Illustrator, asegúrate de que cada parte móvil (brazo, pierna, etc.) sea un objeto vectorial separado.</p>
+                            </li>
+                            <li class="step-item" data-step="2">
+                                <h4 class="text-xl font-bold text-brand-primary">Nombrar Capas (Crítico)</h4>
+                                <p>En el panel <code>Capas</code>, dale a cada objeto un nombre único y claro (ej. "head", "arm_upper_L", "arm_lower_L"). Este nombre será el nombre del archivo.</p>
+                            </li>
+                            <li class="step-item" data-step="3">
+                                <h4 class="text-xl font-bold text-brand-primary">Cambiar a Export Persona</h4>
+                                <p>En la esquina superior izquierda, haz clic en el icono de <code>Export Persona</code> (el tercero, parece una flecha saliendo de un cuadrado).</p>
+                            </li>
+                            <li class="step-item" data-step="4">
+                                <h4 class="text-xl font-bold text-brand-primary">Crear Segmentos (Slices)</h4>
+                                <p>En el panel <code>Capas</code> (dentro de Export Persona), selecciona todas las capas de tu personaje. Luego, en el panel <code>Segmentos</code> (Slices) a la izquierda, haz clic en el botón <strong>"Crear segmentos a partir de capas"</strong>.</p>
+                            </li>
+                            <li class="step-item" data-step="5">
+                                <h4 class="text-xl font-bold text-brand-primary">Exportar Lote</h4>
+                                <p>Verás que Affinity ha creado un "segmento" de exportación para cada capa. En el panel <code>Segmentos</code>, selecciona todos, elige tu formato (ej. PNG-24) y haz clic en <strong>"Exportar segmentos"</strong>. Affinity exportará todas las partes a la vez, nombradas perfectamente y listas para el motor de juego.</p>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="view-automatizacion" class="content-view hidden">
+                <h2 class="text-3xl font-bold text-brand-secondary mb-6 text-center">Módulo 3: Automatización (Scripts)</h2>
+                <p class="text-lg mb-6 max-w-3xl mx-auto text-center">Aprende a ahorrar tiempo automatizando tareas repetitivas. No necesitas ser un programador experto para usar scripts básicos.</p>
+                
+                <div class="text-center mb-6 space-x-2" id="auto-nav">
+                    <button data-subview="adobe" class="auto-subnav-link active font-semibold py-2 px-5 rounded-lg bg-brand-accent text-white shadow-md">Adobe (JSX)</button>
+                    <button data-subview="gimp" class="auto-subnav-link font-semibold py-2 px-5 rounded-lg bg-brand-card text-brand-accent hover:bg-brand-accent/10 shadow-sm border border-brand-accent/30">GIMP (Python-Fu)</button>
+                    <button data-subview="synfig" class="auto-subnav-link font-semibold py-2 px-5 rounded-lg bg-brand-card text-brand-accent hover:bg-brand-accent/10 shadow-sm border border-brand-accent/30">Synfig (Python)</button>
+                    <button data-subview="affinity" class="auto-subnav-link font-semibold py-2 px-5 rounded-lg bg-brand-card text-brand-accent hover:bg-brand-accent/10 shadow-sm border border-brand-accent/30">Affinity (Macros)</button>
+                </div>
+
+                <div class="bg-brand-card shadow-xl rounded-lg p-6 md:p-10 max-w-4xl mx-auto">
+                    
+                    <div id="subview-auto-adobe" class="auto-sub-view">
+                        <h3 class="text-2xl font-bold text-brand-accent mb-4">Adobe (Photoshop / Illustrator)</h3>
+                        <p class="text-lg mb-4">Adobe usa <strong>ExtendScript (JSX)</strong>, que es muy similar a JavaScript. Puedes guardar esto como un archivo <code>.jsx</code> e ir a <code>Archivo > Scripts > Otro Script...</code> para ejecutarlo.</p>
+                        
+                        <p class="text-base font-semibold mb-2">Ejemplo 1 (Photoshop): Convertidor a Pixel Art</p>
+                        <pre class="code-block">
+// Pixel Art Converter for Photoshop
+// Estilo: Zelda ALTTP / Stardew Valley
+//
+// Instrucciones:
+// 1. Abre una imagen en Photoshop
+// 2. File > Scripts > Browse... y selecciona este archivo
+// 3. Ajusta los parámetros si deseas (líneas 11-13)
+// ========== PARÁMETROS AJUSTABLES ==========
+var pixelSize = 6;          // Tamaño del pixel (6-8 recomendado para estilo SNES)
+var colorLevels = 8;        // Niveles de color por canal (4-16 para look retro)
+var addDithering = false;   // true = agregar dithering, false = colores sólidos
+// ===========================================
+// Verificar que hay un documento abierto
+if (app.documents.length === 0) {
+    alert("Por favor abre una imagen primero.");
+} else {
+    var doc = app.activeDocument;
+    var originalRulerUnits = app.preferences.rulerUnits;
+    app.preferences.rulerUnits = Units.PIXELS;
+        
+    try {
+        // Guardar estado para deshacer
+        doc.suspendHistory("Pixel Art Conversion", "convertToPixelArt()");
+                
+        function convertToPixelArt() {
+            // 1. Aplanar imagen si tiene capas
+            if (doc.layers.length > 1 || doc.backgroundLayer == null) {
+                doc.flatten();
+            }
+                        
+            // 2. Convertir a RGB 8 bits si no lo está
+            if (doc.mode != DocumentMode.RGB) {
+                doc.changeMode(ChangeMode.RGB);
+            }
+            if (doc.bitsPerChannel != BitsPerChannelType.EIGHT) {
+                doc.bitsPerChannel = BitsPerChannelType.EIGHT;
+            }
+                        
+            // 3. Obtener dimensiones originales
+            var originalWidth = doc.width.as('px');
+            var originalHeight = doc.height.as('px');
+                        
+            // 4. Reducir resolución (downscale)
+            var smallWidth = Math.round(originalWidth / pixelSize);
+            var smallHeight = Math.round(originalHeight / pixelSize);
+                        
+            // Asegurar mínimo de 16 píxeles
+            if (smallWidth < 16) smallWidth = 16;
+            if (smallHeight < 16) smallHeight = 16;
+                        
+            // Resize con nearest neighbor
+            doc.resizeImage(
+                UnitValue(smallWidth, "px"),
+                UnitValue(smallHeight, "px"),
+                null,
+                ResampleMethod.NEARESTNEIGHBOR
+            );
+                        
+            // 5. Posterizar colores
+            if (colorLevels < 256) {
+                doc.activeLayer.applyPosterize(colorLevels);
+            }
+                        
+            // 6. Dithering opcional (simula transiciones SNES)
+            if (addDithering) {
+                // Convertir temporalmente a indexed color con dithering
+                var idxOptions = new IndexedConversionOptions();
+                idxOptions.palette = Palette.LOCALADAPTIVE;
+                idxOptions.colors = colorLevels * colorLevels;
+                idxOptions.dither = Dither.DIFFUSION;
+                idxOptions.ditherAmount = 50;
+                                
+                doc.changeMode(ChangeMode.INDEXEDCOLOR, idxOptions);
+                doc.changeMode(ChangeMode.RGB);
+            }
+                        
+            // 7. Escalar de vuelta al tamaño original (upscale)
+            doc.resizeImage(
+                UnitValue(originalWidth, "px"),
+                UnitValue(originalHeight, "px"),
+                null,
+                ResampleMethod.NEARESTNEIGHBOR
+            );
+                        
+            // 8. Aplicar ligero sharpen para definir bordes
+            doc.activeLayer.applyUnSharpMask(50, 0.3, 0);
+        }
+                
+        alert("¡Conversión a Pixel Art completada!\n\n" +
+              "Tamaño de pixel: " + pixelSize + "x" + pixelSize + "\n" +
+              "Niveles de color: " + colorLevels + " por canal\n" +
+              "Dithering: " + (addDithering ? "Activado" : "Desactivado"));
+                  
+    } catch (e) {
+        alert("Error: " + e.message);
+    } finally {
+        app.preferences.rulerUnits = originalRulerUnits;
+    }
+}
+</pre>
+                        
+                        <hr class="my-6 border-brand-primary/20">
+
+                        <p class="text-base font-semibold mb-2">Ejemplo 2 (Photoshop): Character Animator - Vista Lateral</p>
+                        <pre class="code-block">
+// PHOTOSHOP CHARACTER ANIMATOR - VISTA LATERAL (PLATFORMER)
+// Convierte un dibujo en personaje animado con ciclos walk/run/jump/crouch
+//
+// INSTRUCCIONES:
+// 1. Abre tu dibujo en Photoshop (debe ser una sola capa)
+// 2. File > Scripts > Browse... y selecciona este archivo
+// 3. Sigue las instrucciones en pantalla para segmentar el personaje
+// 4. El script generará las animaciones automáticamente
+
+// ============ CONFIGURACIÓN ============
+var EXPORT_FOLDER = "~/Desktop/character_animation/";
+var FPS = 12;
+var WALK_FRAMES = 8;
+var RUN_FRAMES = 6;
+var JUMP_FRAMES = 10;
+var CROUCH_FRAMES = 4;
+// ======================================
+
+// Estructura del personaje
+var characterParts = {
+    head: null,
+    torso: null,
+    arm_right: null,
+    arm_left: null,
+    leg_right: null,
+    leg_left: null,
+    foot_right: null,
+    foot_left: null
+};
+
+var pivotPoints = {};
+
+function main() {
+    if (app.documents.length === 0) {
+        alert("Por favor abre una imagen primero.");
+        return;
+    }
+    
+    var doc = app.activeDocument;
+    
+    // Paso 1: Segmentación
+    alert("PASO 1: SEGMENTACIÓN\n\n" +
+          "Vas a seleccionar cada parte del personaje.\n" +
+          "Usa la herramienta de selección (lazo/rectangular) para cada parte.\n\n" +
+          "Orden: Cabeza, Torso, Brazo derecho, Brazo izquierdo,\n" +
+          "Pierna derecha, Pierna izquierda, Pie derecho, Pie izquierdo");
+    
+    var parts = ["head", "torso", "arm_right", "arm_left", 
+                 "leg_right", "leg_left", "foot_right", "foot_left"];
+    
+    var originalLayer = doc.activeLayer;
+    
+    for (var i = 0; i < parts.length; i++) {
+        var partName = parts[i];
+        var displayName = partName.replace(/_/g, " ").toUpperCase();
+        
+        alert("Selecciona: " + displayName + "\n\n" +
+              "Usa cualquier herramienta de selección.\n" +
+              "Presiona OK cuando hayas terminado la selección.");
+        
+        // Copiar selección a nueva capa
+        try {
+            doc.selection.copy();
+            var newLayer = doc.paste();
+            newLayer.name = partName;
+            characterParts[partName] = newLayer;
+            
+            // Calcular punto de pivote (centro inferior para extremidades)
+            var bounds = newLayer.bounds;
+            pivotPoints[partName] = {
+                x: (bounds[0].as('px') + bounds[2].as('px')) / 2,
+                y: bounds[3].as('px') // Parte inferior
+            };
+            
+            doc.selection.deselect();
+        } catch (e) {
+            alert("Error al procesar " + displayName + ": " + e.message);
+            return;
+        }
+    }
+    
+    // Ocultar capa original
+    originalLayer.visible = false;
+    
+    // Paso 2: Ajustar pivotes manualmente (simplificado)
+    definePivots();
+    
+    // Paso 3: Generar animaciones
+    alert("PASO 2: GENERACIÓN DE ANIMACIONES\n\n" +
+          "Se generarán 4 animaciones:\n" +
+          "- Walk (caminar): " + WALK_FRAMES + " frames\n" +
+          "- Run (correr): " + RUN_FRAMES + " frames\n" +
+          "- Jump (saltar): " + JUMP_FRAMES + " frames\n" +
+          "- Crouch (agacharse): " + CROUCH_FRAMES + " frames");
+    
+    generateWalkCycle(doc);
+    generateRunCycle(doc);
+    generateJumpCycle(doc);
+    generateCrouchCycle(doc);
+    
+    alert("¡ANIMACIÓN COMPLETADA!\n\n" +
+          "Se han creado grupos de capas para cada animación.\n" +
+          "Usa Window > Timeline para ver la animación.\n\n" +
+          "Exporta con: File > Export > Render Video");
+}
+
+function definePivots() {
+    // Definir pivotes articulares automáticamente
+    // Hombro = parte superior del brazo
+    if (characterParts.arm_right) {
+        var bounds = characterParts.arm_right.bounds;
+        pivotPoints.shoulder_right = {
+            x: bounds[0].as('px'),
+            y: bounds[1].as('px')
+        };
+    }
+    
+    if (characterParts.arm_left) {
+        var bounds = characterParts.arm_left.bounds;
+        pivotPoints.shoulder_left = {
+            x: bounds[2].as('px'),
+            y: bounds[1].as('px')
+        };
+    }
+    
+    // Cadera = parte superior de la pierna
+    if (characterParts.leg_right) {
+        var bounds = characterParts.leg_right.bounds;
+        pivotPoints.hip_right = {
+            x: (bounds[0].as('px') + bounds[2].as('px')) / 2,
+            y: bounds[1].as('px')
+        };
+    }
+    
+    if (characterParts.leg_left) {
+        var bounds = characterParts.leg_left.bounds;
+        pivotPoints.hip_left = {
+            x: (bounds[0].as('px') + bounds[2].as('px')) / 2,
+            y: bounds[1].as('px')
+        };
+    }
+}
+
+function generateWalkCycle(doc) {
+    var walkGroup = doc.layerSets.add();
+    walkGroup.name = "WALK_CYCLE";
+    
+    for (var frame = 0; frame < WALK_FRAMES; frame++) {
+        var frameGroup = walkGroup.layerSets.add();
+        frameGroup.name = "walk_" + padZero(frame, 3);
+        
+        var t = frame / WALK_FRAMES;
+        
+        // Crear copias de las partes y aplicar transformaciones
+        cloneAndTransform(characterParts.torso, frameGroup, 0, Math.sin(t * Math.PI * 4) * 2);
+        cloneAndTransform(characterParts.head, frameGroup, 0, Math.sin(t * Math.PI * 4) * 2 - 5);
+        
+        // Piernas: movimiento opuesto
+        var legAngleRight = Math.sin(t * Math.PI * 2) * 30;
+        var legAngleLeft = Math.sin((t + 0.5) * Math.PI * 2) * 30;
+        
+        cloneAndRotate(characterParts.leg_right, frameGroup, legAngleRight, pivotPoints.hip_right);
+        cloneAndRotate(characterParts.leg_left, frameGroup, legAngleLeft, pivotPoints.hip_left);
+        
+        // Brazos: movimiento opuesto a piernas
+        var armAngleRight = Math.sin((t + 0.5) * Math.PI * 2) * 25;
+        var armAngleLeft = Math.sin(t * Math.PI * 2) * 25;
+        
+        cloneAndRotate(characterParts.arm_right, frameGroup, armAngleRight, pivotPoints.shoulder_right);
+        cloneAndRotate(characterParts.arm_left, frameGroup, armAngleLeft, pivotPoints.shoulder_left);
+        
+        // Pies
+        cloneAndTransform(characterParts.foot_right, frameGroup, 0, Math.sin(t * Math.PI * 2) * 8);
+        cloneAndTransform(characterParts.foot_left, frameGroup, 0, Math.sin((t + 0.5) * Math.PI * 2) * 8);
+    }
+}
+
+function generateRunCycle(doc) {
+    var runGroup = doc.layerSets.add();
+    runGroup.name = "RUN_CYCLE";
+    
+    for (var frame = 0; frame < RUN_FRAMES; frame++) {
+        var frameGroup = runGroup.layerSets.add();
+        frameGroup.name = "run_" + padZero(frame, 3);
+        
+        var t = frame / RUN_FRAMES;
+        
+        // Inclinación hacia adelante
+        var bodyAngle = 15;
+        cloneAndRotate(characterParts.torso, frameGroup, bodyAngle, pivotPoints.torso);
+        cloneAndRotate(characterParts.head, frameGroup, bodyAngle - 10, pivotPoints.head);
+        
+        // Piernas más amplias
+        var legAngleRight = Math.sin(t * Math.PI * 2) * 45;
+        var legAngleLeft = Math.sin((t + 0.5) * Math.PI * 2) * 45;
+        
+        cloneAndRotate(characterParts.leg_right, frameGroup, legAngleRight, pivotPoints.hip_right);
+        cloneAndRotate(characterParts.leg_left, frameGroup, legAngleLeft, pivotPoints.hip_left);
+        
+        // Brazos más amplios
+        var armAngleRight = Math.sin((t + 0.5) * Math.PI * 2) * 40;
+        var armAngleLeft = Math.sin(t * Math.PI * 2) * 40;
+        
+        cloneAndRotate(characterParts.arm_right, frameGroup, armAngleRight, pivotPoints.shoulder_right);
+        cloneAndRotate(characterParts.arm_left, frameGroup, armAngleLeft, pivotPoints.shoulder_left);
+    }
+}
+
+function generateJumpCycle(doc) {
+    var jumpGroup = doc.layerSets.add();
+    jumpGroup.name = "JUMP_CYCLE";
+    
+    for (var frame = 0; frame < JUMP_FRAMES; frame++) {
+        var frameGroup = jumpGroup.layerSets.add();
+        frameGroup.name = "jump_" + padZero(frame, 3);
+        
+        var t = frame / JUMP_FRAMES;
+        
+        // Parábola de salto
+        var jumpHeight = Math.sin(t * Math.PI) * -50;
+        
+        // Preparación (0-0.3), vuelo (0.3-0.7), aterrizaje (0.7-1.0)
+        var bodyAngle = 0;
+        var legAngle = 0;
+        
+        if (t < 0.3) {
+            // Preparación: agachado
+            bodyAngle = 10;
+            legAngle = -45;
+        } else if (t < 0.7) {
+            // Vuelo: extendido
+            bodyAngle = -5;
+            legAngle = 20;
+        } else {
+            // Aterrizaje: recogido
+            bodyAngle = 15;
+            legAngle = -30;
+        }
+        
+        cloneAndTransform(characterParts.torso, frameGroup, 0, jumpHeight);
+        cloneAndTransform(characterParts.head, frameGroup, 0, jumpHeight - 5);
+        
+        cloneAndRotate(characterParts.leg_right, frameGroup, legAngle, pivotPoints.hip_right);
+        cloneAndRotate(characterParts.leg_left, frameGroup, legAngle, pivotPoints.hip_left);
+        
+        // Brazos hacia arriba en el salto
+        var armAngle = t < 0.5 ? -80 : -40;
+        cloneAndRotate(characterParts.arm_right, frameGroup, armAngle, pivotPoints.shoulder_right);
+        cloneAndRotate(characterParts.arm_left, frameGroup, armAngle, pivotPoints.shoulder_left);
+    }
+}
+
+function generateCrouchCycle(doc) {
+    var crouchGroup = doc.layerSets.add();
+    crouchGroup.name = "CROUCH_CYCLE";
+    
+    for (var frame = 0; frame < CROUCH_FRAMES; frame++) {
+        var frameGroup = crouchGroup.layerSets.add();
+        frameGroup.name = "crouch_" + padZero(frame, 3);
+        
+        var t = frame / (CROUCH_FRAMES - 1);
+        
+        // Transición de pie a agachado
+        var crouchOffset = t * 30; // Bajar 30 píxeles
+        var legBend = t * -60; // Doblar piernas
+        
+        cloneAndTransform(characterParts.torso, frameGroup, 0, crouchOffset);
+        cloneAndTransform(characterParts.head, frameGroup, 0, crouchOffset - 10);
+        
+        cloneAndRotate(characterParts.leg_right, frameGroup, legBend, pivotPoints.hip_right);
+        cloneAndRotate(characterParts.leg_left, frameGroup, legBend, pivotPoints.hip_left);
+        
+        // Brazos adelante
+        cloneAndRotate(characterParts.arm_right, frameGroup, 45, pivotPoints.shoulder_right);
+        cloneAndRotate(characterParts.arm_left, frameGroup, 45, pivotPoints.shoulder_left);
+    }
+}
+
+// Funciones auxiliares
+function cloneAndTransform(layer, targetGroup, offsetX, offsetY) {
+    if (!layer) return;
+    
+    var duplicate = layer.duplicate(targetGroup, ElementPlacement.INSIDE);
+    duplicate.translate(UnitValue(offsetX, "px"), UnitValue(offsetY, "px"));
+    return duplicate;
+}
+
+function cloneAndRotate(layer, targetGroup, angle, pivot) {
+    if (!layer) return;
+    
+    var duplicate = layer.duplicate(targetGroup, ElementPlacement.INSIDE);
+    
+    // Photoshop no permite rotación con pivote personalizado directamente
+    // Esta es una aproximación usando traslación + rotación
+    duplicate.rotate(angle, AnchorPosition.MIDDLECENTER);
+    
+    return duplicate;
+}
+
+function padZero(num, length) {
+    var str = num.toString();
+    while (str.length < length) {
+        str = "0" + str;
+    }
+    return str;
+}
+
+// Ejecutar
+main();
+</pre>
+                        
+                        <hr class="my-6 border-brand-primary/20">
+                        <p class="text-base font-semibold mb-2">Ejemplo 3 (Photoshop): Character Animator - Vista Top-Down</p>
+                        <pre class="code-block">
+// PHOTOSHOP CHARACTER ANIMATOR - VISTA TOP-DOWN (ESTILO ZELDA)
+// Convierte un dibujo en personaje animado con ciclos walk/run para 4 direcciones
+//
+// INSTRUCCIONES:
+// 1. Abre tu dibujo en Photoshop (vista desde arriba)
+// 2. File > Scripts > Browse... y selecciona este archivo
+// 3. Segmenta el personaje siguiendo las instrucciones
+// 4. El script genera animaciones en 4 direcciones (N, S, E, W)
+
+// ============ CONFIGURACIÓN ============
+var FPS = 8;
+var WALK_FRAMES = 4;
+var RUN_FRAMES = 4;
+var DIRECTIONS = ["north", "south", "east", "west"];
+// ======================================
+
+var characterParts = {
+    head: null,
+    body: null,
+    arm_right: null,
+    arm_left: null,
+    leg_right: null,
+    leg_left: null,
+    shadow: null
+};
+
+function main() {
+    if (app.documents.length === 0) {
+        alert("Por favor abre una imagen primero.");
+        return;
+    }
+    
+    var doc = app.activeDocument;
+    
+    alert("ANIMATOR TOP-DOWN\n\n" +
+          "Para vista cenital (como Zelda, Stardew Valley).\n" +
+          "Se generarán sprites en 4 direcciones.\n\n" +
+          "IMPORTANTE: Tu personaje debe estar mirando hacia ABAJO inicialmente.");
+    
+    // Segmentación
+    var parts = ["head", "body", "arm_right", "arm_left", 
+                 "leg_right", "leg_left", "shadow"];
+    
+    var originalLayer = doc.activeLayer;
+    
+    for (var i = 0; i < parts.length; i++) {
+        var partName = parts[i];
+        var displayName = partName.replace(/_/g, " ").toUpperCase();
+        
+        if (partName === "shadow") {
+            var addShadow = confirm("¿Agregar sombra opcional?\n(Círculo oscuro bajo el personaje)");
+            if (!addShadow) continue;
+        }
+        
+        alert("Selecciona: " + displayName);
+        
+        try {
+            doc.selection.copy();
+            var newLayer = doc.paste();
+            newLayer.name = partName;
+            characterParts[partName] = newLayer;
+            doc.selection.deselect();
+        } catch (e) {
+            alert("Error: " + e.message);
+            return;
+        }
+    }
+    
+    originalLayer.visible = false;
+    
+    // Generar animaciones para cada dirección
+    for (var d = 0; d < DIRECTIONS.length; d++) {
+        var direction = DIRECTIONS[d];
+        generateWalkDirection(doc, direction);
+        generateRunDirection(doc, direction);
+    }
+    
+    alert("¡COMPLETADO!\n\n" +
+          "Se crearon 8 grupos de animación:\n" +
+          "- WALK_NORTH/SOUTH/EAST/WEST\n" +
+          "- RUN_NORTH/SOUTH/EAST/WEST\n\n" +
+          "Exporta cada dirección por separado para tu juego.");
+}
+
+function generateWalkDirection(doc, direction) {
+    var walkGroup = doc.layerSets.add();
+    walkGroup.name = "WALK_" + direction.toUpperCase();
+    
+    for (var frame = 0; frame < WALK_FRAMES; frame++) {
+        var frameGroup = walkGroup.layerSets.add();
+        frameGroup.name = "walk_" + direction + "_" + padZero(frame, 2);
+        
+        var t = frame / WALK_FRAMES;
+        
+        // Rotación del cuerpo según dirección
+        var bodyRotation = getDirectionRotation(direction);
+        
+        // Oscilación de cabeza
+        var headBob = Math.sin(t * Math.PI * 2) * 1;
+        
+        // Brazos alternan
+        var armSwing = Math.sin(t * Math.PI * 2) * 3;
+        
+        // Piernas alternan
+        var legSwing = Math.sin(t * Math.PI * 2) * 5;
+        
+        // Clonar y rotar todas las partes
+        if (characterParts.body) {
+            var body = characterParts.body.duplicate(frameGroup, ElementPlacement.INSIDE);
+            body.rotate(bodyRotation, AnchorPosition.MIDDLECENTER);
+        }
+        
+        if (characterParts.head) {
+            var head = characterParts.head.duplicate(frameGroup, ElementPlacement.INSIDE);
+            head.rotate(bodyRotation, AnchorPosition.MIDDLECENTER);
+            head.translate(0, headBob);
+        }
+        
+        if (characterParts.arm_right) {
+            var armR = characterParts.arm_right.duplicate(frameGroup, ElementPlacement.INSIDE);
+            armR.rotate(bodyRotation, AnchorPosition.MIDDLECENTER);
+            armR.translate(armSwing, 0);
+        }
+        
+        if (characterParts.arm_left) {
+            var armL = characterParts.arm_left.duplicate(frameGroup, ElementPlacement.INSIDE);
+            armL.rotate(bodyRotation, AnchorPosition.MIDDLECENTER);
+            armL.translate(-armSwing, 0);
+        }
+        
+        if (characterParts.leg_right) {
+            var legR = characterParts.leg_right.duplicate(frameGroup, ElementPlacement.INSIDE);
+            legR.rotate(bodyRotation, AnchorPosition.MIDDLECENTER);
+            legR.translate(legSwing, 0);
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = characterParts.leg_left.duplicate(frameGroup, ElementPlacement.INSIDE);
+            legL.rotate(bodyRotation, AnchorPosition.MIDDLECENTER);
+            legL.translate(-legSwing, 0);
+        }
+        
+        if (characterParts.shadow) {
+            var shadow = characterParts.shadow.duplicate(frameGroup, ElementPlacement.INSIDE);
+            shadow.opacity = 40;
+        }
+    }
+}
+
+function generateRunDirection(doc, direction) {
+    var runGroup = doc.layerSets.add();
+    runGroup.name = "RUN_" + direction.toUpperCase();
+    
+    for (var frame = 0; frame < RUN_FRAMES; frame++) {
+        var frameGroup = runGroup.layerSets.add();
+        frameGroup.name = "run_" + direction + "_" + padZero(frame, 2);
+        
+        var t = frame / RUN_FRAMES;
+        var bodyRotation = getDirectionRotation(direction);
+        
+        // Movimiento más pronunciado
+        var headBob = Math.sin(t * Math.PI * 2) * 2;
+        var armSwing = Math.sin(t * Math.PI * 2) * 6;
+        var legSwing = Math.sin(t * Math.PI * 2) * 8;
+        
+        // Inclinación del cuerpo
+        var bodyLean = Math.sin(t * Math.PI * 2) * 2;
+        
+        if (characterParts.body) {
+            var body = characterParts.body.duplicate(frameGroup, ElementPlacement.INSIDE);
+            body.rotate(bodyRotation, AnchorPosition.MIDDLECENTER);
+            body.translate(bodyLean, 0);
+        }
+        
+        if (characterParts.head) {
+            var head = characterParts.head.duplicate(frameGroup, ElementPlacement.INSIDE);
+            head.rotate(bodyRotation, AnchorPosition.MIDDLECENTER);
+            head.translate(bodyLean, headBob);
+        }
+        
+        if (characterParts.arm_right) {
+            var armR = characterParts.arm_right.duplicate(frameGroup, ElementPlacement.INSIDE);
+            armR.rotate(bodyRotation, AnchorPosition.MIDDLECENTER);
+            armR.translate(armSwing + bodyLean, 0);
+        }
+        
+        if (characterParts.arm_left) {
+            var armL = characterParts.arm_left.duplicate(frameGroup, ElementPlacement.INSIDE);
+            armL.rotate(bodyRotation, AnchorPosition.MIDDLECENTER);
+            armL.translate(-armSwing + bodyLean, 0);
+        }
+        
+        if (characterParts.leg_right) {
+            var legR = characterParts.leg_right.duplicate(frameGroup, ElementPlacement.INSIDE);
+            legR.rotate(bodyRotation, AnchorPosition.MIDDLECENTER);
+            legR.translate(legSwing + bodyLean, 0);
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = characterParts.leg_left.duplicate(frameGroup, ElementPlacement.INSIDE);
+            legL.rotate(bodyRotation, AnchorPosition.MIDDLECENTER);
+            legL.translate(-legSwing + bodyLean, 0);
+        }
+        
+        if (characterParts.shadow) {
+            var shadow = characterParts.shadow.duplicate(frameGroup, ElementPlacement.INSIDE);
+            shadow.opacity = 40;
+        }
+    }
+}
+
+function getDirectionRotation(direction) {
+    switch(direction) {
+        case "north": return 0;   // Arriba
+        case "south": return 180;  // Abajo (posición inicial)
+        case "east": return 270;   // Derecha
+        case "west": return 90;    // Izquierda
+        default: return 0;
+    }
+}
+
+function padZero(num, length) {
+    var str = num.toString();
+    while (str.length < length) {
+        str = "0" + str;
+    }
+    return str;
+}
+
+main();
+</pre>
+
+                        <hr class="my-6 border-brand-primary/20">
+                        <p class="text-base font-semibold mb-2">Ejemplo 4 (Photoshop): Character Animator - Vista Isométrica</p>
+                        <pre class="code-block">
+// PHOTOSHOP CHARACTER ANIMATOR - VISTA ISOMÉTRICA
+// Convierte un dibujo en personaje animado con perspectiva isométrica
+// Genera ciclos en 8 direcciones (N, NE, E, SE, S, SW, W, NW)
+//
+// INSTRUCCIONES:
+// 1. Abre tu dibujo en Photoshop (vista isométrica 2:1)
+// 2. File > Scripts > Browse... y selecciona este archivo
+// 3. El personaje debe estar en ángulo 3/4 mirando hacia abajo-derecha
+
+// ============ CONFIGURACIÓN ============
+var FPS = 8;
+var WALK_FRAMES = 8;
+var RUN_FRAMES = 6;
+var ISO_ANGLE = 26.565; // Ángulo isométrico estándar
+var DIRECTIONS_8 = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+// ======================================
+
+var characterParts = {
+    head: null,
+    torso: null,
+    arm_right: null,
+    arm_left: null,
+    leg_right: null,
+    leg_left: null,
+    shadow: null
+};
+
+function main() {
+    if (app.documents.length === 0) {
+        alert("Por favor abre una imagen primero.");
+        return;
+    }
+    
+    var doc = app.activeDocument;
+    
+    alert("ANIMATOR ISOMÉTRICO\n\n" +
+          "Para juegos con perspectiva isométrica.\n" +
+          "Se generarán sprites en 8 direcciones.\n\n" +
+          "TU PERSONAJE debe estar en vista 3/4\n" +
+          "mirando hacia ABAJO-DERECHA (SE).");
+    
+    // Segmentación
+    var parts = ["head", "torso", "arm_right", "arm_left", 
+                 "leg_right", "leg_left", "shadow"];
+    
+    var originalLayer = doc.activeLayer;
+    
+    for (var i = 0; i < parts.length; i++) {
+        var partName = parts[i];
+        var displayName = partName.replace(/_/g, " ").toUpperCase();
+        
+        if (partName === "shadow") {
+            var addShadow = confirm("¿Agregar sombra isométrica?\n(Óvalo proyectado en el suelo)");
+            if (!addShadow) continue;
+        }
+        
+        alert("Selecciona: " + displayName);
+        
+        try {
+            doc.selection.copy();
+            var newLayer = doc.paste();
+            newLayer.name = partName;
+            characterParts[partName] = newLayer;
+            doc.selection.deselect();
+        } catch (e) {
+            alert("Error: " + e.message);
+            return;
+        }
+    }
+    
+    originalLayer.visible = false;
+    
+    // Generar animaciones para 8 direcciones
+    for (var d = 0; d < DIRECTIONS_8.length; d++) {
+        var direction = DIRECTIONS_8[d];
+        generateWalkIso(doc, direction);
+        generateRunIso(doc, direction);
+    }
+    
+    // Generar animaciones especiales
+    generateJumpIso(doc);
+    generateCrouchIso(doc);
+    
+    alert("¡COMPLETADO!\n\n" +
+          "Se crearon grupos de animación isométrica:\n" +
+          "- WALK_N/NE/E/SE/S/SW/W/NW (8 direcciones)\n" +
+          "- RUN_N/NE/E/SE/S/SW/W/NW (8 direcciones)\n" +
+          "- JUMP_ISO\n" +
+          "- CROUCH_ISO");
+}
+
+function generateWalkIso(doc, direction) {
+    var walkGroup = doc.layerSets.add();
+    walkGroup.name = "WALK_" + direction;
+    
+    for (var frame = 0; frame < WALK_FRAMES; frame++) {
+        var frameGroup = walkGroup.layerSets.add();
+        frameGroup.name = "walk_" + direction + "_" + padZero(frame, 2);
+        
+        var t = frame / WALK_FRAMES;
+        
+        // Calcular transformación isométrica
+        var isoTransform = getIsometricTransform(direction);
+        
+        // Oscilación vertical (simula paso)
+        var bobY = Math.abs(Math.sin(t * Math.PI * 2)) * 2;
+        
+        // Movimiento de extremidades
+        var legPhase = Math.sin(t * Math.PI * 2);
+        var armPhase = Math.sin((t + 0.5) * Math.PI * 2);
+        
+        // Cabeza
+        if (characterParts.head) {
+            var head = characterParts.head.duplicate(frameGroup, ElementPlacement.INSIDE);
+            applyIsometricRotation(head, isoTransform.angle);
+            head.translate(isoTransform.offsetX, -bobY + isoTransform.offsetY);
+        }
+        
+        // Torso
+        if (characterParts.torso) {
+            var torso = characterParts.torso.duplicate(frameGroup, ElementPlacement.INSIDE);
+            applyIsometricRotation(torso, isoTransform.angle);
+            torso.translate(isoTransform.offsetX, isoTransform.offsetY);
+        }
+        
+        // Piernas con perspectiva
+        if (characterParts.leg_right) {
+            var legR = characterParts.leg_right.duplicate(frameGroup, ElementPlacement.INSIDE);
+            applyIsometricRotation(legR, isoTransform.angle);
+            var legOffsetX = legPhase * 3 * isoTransform.dirX;
+            var legOffsetY = legPhase * 1.5 * isoTransform.dirY; // Compresión isométrica
+            legR.translate(isoTransform.offsetX + legOffsetX, isoTransform.offsetY + legOffsetY);
+            
+            // Ajustar z-index según dirección
+            if (legPhase > 0) legR.move(frameGroup, ElementPlacement.PLACEATBEGINNING);
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = characterParts.leg_left.duplicate(frameGroup, ElementPlacement.INSIDE);
+            applyIsometricRotation(legL, isoTransform.angle);
+            var legOffsetX = -legPhase * 3 * isoTransform.dirX;
+            var legOffsetY = -legPhase * 1.5 * isoTransform.dirY;
+            legL.translate(isoTransform.offsetX + legOffsetX, isoTransform.offsetY + legOffsetY);
+            
+            if (legPhase < 0) legL.move(frameGroup, ElementPlacement.PLACEATBEGINNING);
+        }
+        
+        // Brazos
+        if (characterParts.arm_right) {
+            var armR = characterParts.arm_right.duplicate(frameGroup, ElementPlacement.INSIDE);
+            applyIsometricRotation(armR, isoTransform.angle);
+            var armOffsetX = armPhase * 2 * isoTransform.dirX;
+            var armOffsetY = armPhase * 1 * isoTransform.dirY;
+            armR.translate(isoTransform.offsetX + armOffsetX, isoTransform.offsetY + armOffsetY);
+        }
+        
+        if (characterParts.arm_left) {
+            var armL = characterParts.arm_left.duplicate(frameGroup, ElementPlacement.INSIDE);
+            applyIsometricRotation(armL, isoTransform.angle);
+            var armOffsetX = -armPhase * 2 * isoTransform.dirX;
+            var armOffsetY = -armPhase * 1 * isoTransform.dirY;
+            armL.translate(isoTransform.offsetX + armOffsetX, isoTransform.offsetY + armOffsetY);
+        }
+        
+        // Sombra isométrica
+        if (characterParts.shadow) {
+            var shadow = characterParts.shadow.duplicate(frameGroup, ElementPlacement.INSIDE);
+            shadow.opacity = 30;
+            shadow.move(frameGroup, ElementPlacement.PLACEATEND);
+        }
+    }
+}
+
+function generateRunIso(doc, direction) {
+    var runGroup = doc.layerSets.add();
+    runGroup.name = "RUN_" + direction;
+    
+    for (var frame = 0; frame < RUN_FRAMES; frame++) {
+        var frameGroup = runGroup.layerSets.add();
+        frameGroup.name = "run_" + direction + "_" + padZero(frame, 2);
+        
+        var t = frame / RUN_FRAMES;
+        var isoTransform = getIsometricTransform(direction);
+        
+        // Movimiento más pronunciado
+        var bobY = Math.abs(Math.sin(t * Math.PI * 2)) * 4;
+        var legPhase = Math.sin(t * Math.PI * 2);
+        var armPhase = Math.sin((t + 0.5) * Math.PI * 2);
+        
+        // Inclinación hacia adelante
+        var leanX = 2 * isoTransform.dirX;
+        var leanY = 1 * isoTransform.dirY;
+        
+        if (characterParts.torso) {
+            var torso = characterParts.torso.duplicate(frameGroup, ElementPlacement.INSIDE);
+            applyIsometricRotation(torso, isoTransform.angle);
+            torso.translate(isoTransform.offsetX + leanX, isoTransform.offsetY + leanY);
+        }
+        
+        if (characterParts.head) {
+            var head = characterParts.head.duplicate(frameGroup, ElementPlacement.INSIDE);
+            applyIsometricRotation(head, isoTransform.angle);
+            head.translate(isoTransform.offsetX + leanX, -bobY + isoTransform.offsetY + leanY);
+        }
+        
+        // Extremidades con mayor amplitud
+        var legSwing = 6;
+        var armSwing = 4;
+        
+        if (characterParts.leg_right) {
+            var legR = characterParts.leg_right.duplicate(frameGroup, ElementPlacement.INSIDE);
+            applyIsometricRotation(legR, isoTransform.angle);
+            legR.translate(
+                isoTransform.offsetX + legPhase * legSwing * isoTransform.dirX,
+                isoTransform.offsetY + legPhase * legSwing * 0.5 * isoTransform.dirY
+            );
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = characterParts.leg_left.duplicate(frameGroup, ElementPlacement.INSIDE);
+            applyIsometricRotation(legL, isoTransform.angle);
+            legL.translate(
+                isoTransform.offsetX - legPhase * legSwing * isoTransform.dirX,
+                isoTransform.offsetY - legPhase * legSwing * 0.5 * isoTransform.dirY
+            );
+        }
+        
+        if (characterParts.shadow) {
+            var shadow = characterParts.shadow.duplicate(frameGroup, ElementPlacement.INSIDE);
+            shadow.opacity = 30;
+        }
+    }
+}
+
+function generateJumpIso(doc) {
+    var jumpGroup = doc.layerSets.add();
+    jumpGroup.name = "JUMP_ISO";
+    
+    var jumpFrames = 12;
+    
+    for (var frame = 0; frame < jumpFrames; frame++) {
+        var frameGroup = jumpGroup.layerSets.add();
+        frameGroup.name = "jump_" + padZero(frame, 2);
+        
+        var t = frame / jumpFrames;
+        var jumpHeight = Math.sin(t * Math.PI) * -30; // Altura de salto
+        
+        // Compresión/extensión
+        var legExtend = t < 0.5 ? t * 2 : (1 - t) * 2;
+        
+        if (characterParts.torso) {
+            var torso = characterParts.torso.duplicate(frameGroup, ElementPlacement.INSIDE);
+            torso.translate(0, jumpHeight);
+        }
+        
+        if (characterParts.head) {
+            var head = characterParts.head.duplicate(frameGroup, ElementPlacement.INSIDE);
+            head.translate(0, jumpHeight - 5);
+        }
+        
+        if (characterParts.leg_right) {
+            var legR = characterParts.leg_right.duplicate(frameGroup, ElementPlacement.INSIDE);
+            legR.translate(legExtend * 3, jumpHeight + legExtend * 5);
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = characterParts.leg_left.duplicate(frameGroup, ElementPlacement.INSIDE);
+            legL.translate(-legExtend * 3, jumpHeight + legExtend * 5);
+        }
+    }
+}
+
+function generateCrouchIso(doc) {
+    var crouchGroup = doc.layerSets.add();
+    crouchGroup.name = "CROUCH_ISO";
+    
+    var crouchFrames = 6;
+    
+    for (var frame = 0; frame < crouchFrames; frame++) {
+        var frameGroup = crouchGroup.layerSets.add();
+        frameGroup.name = "crouch_" + padZero(frame, 2);
+        
+        var t = frame / (crouchFrames - 1);
+        var crouchY = t * 15; // Descenso
+        
+        if (characterParts.torso) {
+            var torso = characterParts.torso.duplicate(frameGroup, ElementPlacement.INSIDE);
+            torso.translate(0, crouchY);
+        }
+        
+        if (characterParts.head) {
+            var head = characterParts.head.duplicate(frameGroup, ElementPlacement.INSIDE);
+            head.translate(0, crouchY + t * 10);
+        }
+    }
+}
+
+function getIsometricTransform(direction) {
+    var transforms = {
+        N:  {angle: 0,   dirX: 0,  dirY: -1, offsetX: 0,  offsetY: 0},
+        NE: {angle: 45,  dirX: 1,  dirY: -1, offsetX: 0,  offsetY: 0},
+        E:  {angle: 90,  dirX: 1,  dirY: 0,  offsetX: 0,  offsetY: 0},
+        SE: {angle: 135, dirX: 1,  dirY: 1,  offsetX: 0,  offsetY: 0},
+        S:  {angle: 180, dirX: 0,  dirY: 1,  offsetX: 0,  offsetY: 0},
+        SW: {angle: 225, dirX: -1, dirY: 1,  offsetX: 0,  offsetY: 0},
+        W:  {angle: 270, dirX: -1, dirY: 0,  offsetX: 0,  offsetY: 0},
+        NW: {angle: 315, dirX: -1, dirY: -1, offsetX: 0,  offsetY: 0}
+    };
+    
+    return transforms[direction];
+}
+
+function applyIsometricRotation(layer, angle) {
+    // Rotar para dirección isométrica
+    layer.rotate(angle, AnchorPosition.MIDDLECENTER);
+    
+    // Escala vertical para perspectiva isométrica (compresión 2:1)
+    // Nota: En Photoshop esto requiere transformación libre
+    // Esta es una aproximación simplificada
+}
+
+function padZero(num, length) {
+    var str = num.toString();
+    while (str.length < length) {
+        str = "0" + str;
+    }
+    return str;
+}
+
+main();
+</pre>
+                        
+                        <hr class="my-6 border-brand-primary/20">
+                        <p class="text-base font-semibold mb-2">Ejemplo 5 (Illustrator): Character Animator - Vista Lateral</p>
+                        <pre class="code-block">
+// ILLUSTRATOR CHARACTER ANIMATOR - VISTA LATERAL
+// Genera animaciones walk/run/jump/crouch en artboards separados
+//
+// INSTRUCCIONES:
+// 1. Abre tu dibujo en Illustrator (vista lateral)
+// 2. File > Scripts > Other Script... y selecciona este archivo
+// 3. Segmenta el personaje siguiendo instrucciones
+// 4. Se crearán artboards para cada frame
+
+// ============ CONFIGURACIÓN ============
+var WALK_FRAMES = 8;
+var RUN_FRAMES = 6;
+var JUMP_FRAMES = 10;
+var CROUCH_FRAMES = 4;
+var ARTBOARD_WIDTH = 400;
+var ARTBOARD_HEIGHT = 400;
+// ======================================
+
+var characterParts = {};
+
+function main() {
+    if (app.documents.length === 0) {
+        alert("Por favor abre un documento primero.");
+        return;
+    }
+    
+    var doc = app.activeDocument;
+    
+    alert("ANIMATOR LATERAL - ILLUSTRATOR\n\n" +
+          "Segmenta tu personaje usando la herramienta de selección.\n" +
+          "Cada parte será convertida en un símbolo para animación.");
+    
+    // Segmentación
+    var partNames = ["head", "torso", "arm_right", "arm_left", 
+                     "leg_right", "leg_left", "foot_right", "foot_left"];
+    
+    for (var i = 0; i < partNames.length; i++) {
+        var partName = partNames[i];
+        var displayName = partName.replace(/_/g, " ").toUpperCase();
+        
+        alert("Selecciona: " + displayName + "\n\nUsa la herramienta de selección (V).\nPresiona OK cuando hayas seleccionado.");
+        
+        if (doc.selection.length > 0) {
+            // Crear símbolo de la selección
+            var symbol = doc.symbols.add(doc.selection[0]);
+            symbol.name = partName;
+            
+            characterParts[partName] = {
+                symbol: symbol,
+                bounds: doc.selection[0].geometricBounds
+            };
+            
+            doc.selection[0].hidden = true;
+        }
+    }
+    
+    // Generar animaciones
+    generateWalkCycle(doc);
+    generateRunCycle(doc);
+    generateJumpCycle(doc);
+    generateCrouchCycle(doc);
+    
+    alert("¡ANIMACIÓN COMPLETADA!\n\n" +
+          "Se crearon artboards para cada ciclo de animación.\n" +
+          "Total de artboards: " + doc.artboards.length);
+}
+
+function generateWalkCycle(doc) {
+    for (var frame = 0; frame < WALK_FRAMES; frame++) {
+        var artboard = doc.artboards.add([0, 0, ARTBOARD_WIDTH, ARTBOARD_HEIGHT]);
+        artboard.name = "WALK_" + padZero(frame, 3);
+        
+        var t = frame / WALK_FRAMES;
+        
+        // Crear instancias de símbolos
+        if (characterParts.torso) {
+            var torsoInstance = doc.symbolItems.add(characterParts.torso.symbol);
+            torsoInstance.top = ARTBOARD_HEIGHT / 2 + Math.sin(t * Math.PI * 4) * 2;
+            torsoInstance.left = ARTBOARD_WIDTH / 2;
+        }
+        
+        if (characterParts.head) {
+            var headInstance = doc.symbolItems.add(characterParts.head.symbol);
+            headInstance.top = ARTBOARD_HEIGHT / 2 - 50 + Math.sin(t * Math.PI * 4) * 2;
+            headInstance.left = ARTBOARD_WIDTH / 2;
+        }
+        
+        // Piernas
+        var legAngleRight = Math.sin(t * Math.PI * 2) * 30;
+        var legAngleLeft = Math.sin((t + 0.5) * Math.PI * 2) * 30;
+        
+        if (characterParts.leg_right) {
+            var legR = doc.symbolItems.add(characterParts.leg_right.symbol);
+            legR.top = ARTBOARD_HEIGHT / 2 + 20;
+            legR.left = ARTBOARD_WIDTH / 2 + 10;
+            legR.rotate(legAngleRight);
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = doc.symbolItems.add(characterParts.leg_left.symbol);
+            legL.top = ARTBOARD_HEIGHT / 2 + 20;
+            legL.left = ARTBOARD_WIDTH / 2 - 10;
+            legL.rotate(legAngleLeft);
+        }
+        
+        // Brazos
+        var armAngleRight = Math.sin((t + 0.5) * Math.PI * 2) * 25;
+        var armAngleLeft = Math.sin(t * Math.PI * 2) * 25;
+        
+        if (characterParts.arm_right) {
+            var armR = doc.symbolItems.add(characterParts.arm_right.symbol);
+            armR.top = ARTBOARD_HEIGHT / 2 - 10;
+            armR.left = ARTBOARD_WIDTH / 2 + 20;
+            armR.rotate(armAngleRight);
+        }
+        
+        if (characterParts.arm_left) {
+            var armL = doc.symbolItems.add(characterParts.arm_left.symbol);
+            armL.top = ARTBOARD_HEIGHT / 2 - 10;
+            armL.left = ARTBOARD_WIDTH / 2 - 20;
+            armL.rotate(armAngleLeft);
+        }
+        
+        // Pies
+        if (characterParts.foot_right) {
+            var footR = doc.symbolItems.add(characterParts.foot_right.symbol);
+            footR.top = ARTBOARD_HEIGHT / 2 + 80 + Math.sin(t * Math.PI * 2) * 8;
+            footR.left = ARTBOARD_WIDTH / 2 + 10;
+        }
+        
+        if (characterParts.foot_left) {
+            var footL = doc.symbolItems.add(characterParts.foot_left.symbol);
+            footL.top = ARTBOARD_HEIGHT / 2 + 80 + Math.sin((t + 0.5) * Math.PI * 2) * 8;
+            footL.left = ARTBOARD_WIDTH / 2 - 10;
+        }
+    }
+}
+
+function generateRunCycle(doc) {
+    for (var frame = 0; frame < RUN_FRAMES; frame++) {
+        var artboard = doc.artboards.add([0, 0, ARTBOARD_WIDTH, ARTBOARD_HEIGHT]);
+        artboard.name = "RUN_" + padZero(frame, 3);
+        
+        var t = frame / RUN_FRAMES;
+        
+        // Inclinación hacia adelante
+        var leanOffset = 15;
+        
+        if (characterParts.torso) {
+            var torso = doc.symbolItems.add(characterParts.torso.symbol);
+            torso.top = ARTBOARD_HEIGHT / 2;
+            torso.left = ARTBOARD_WIDTH / 2 + leanOffset;
+            torso.rotate(15);
+        }
+        
+        if (characterParts.head) {
+            var head = doc.symbolItems.add(characterParts.head.symbol);
+            head.top = ARTBOARD_HEIGHT / 2 - 50;
+            head.left = ARTBOARD_WIDTH / 2 + leanOffset;
+            head.rotate(10);
+        }
+        
+        // Piernas con mayor amplitud
+        var legAngleRight = Math.sin(t * Math.PI * 2) * 45;
+        var legAngleLeft = Math.sin((t + 0.5) * Math.PI * 2) * 45;
+        
+        if (characterParts.leg_right) {
+            var legR = doc.symbolItems.add(characterParts.leg_right.symbol);
+            legR.top = ARTBOARD_HEIGHT / 2 + 20;
+            legR.left = ARTBOARD_WIDTH / 2 + 10;
+            legR.rotate(legAngleRight);
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = doc.symbolItems.add(characterParts.leg_left.symbol);
+            legL.top = ARTBOARD_HEIGHT / 2 + 20;
+            legL.left = ARTBOARD_WIDTH / 2 - 10;
+            legL.rotate(legAngleLeft);
+        }
+        
+        // Brazos con mayor amplitud
+        var armAngleRight = Math.sin((t + 0.5) * Math.PI * 2) * 40;
+        var armAngleLeft = Math.sin(t * Math.PI * 2) * 40;
+        
+        if (characterParts.arm_right) {
+            var armR = doc.symbolItems.add(characterParts.arm_right.symbol);
+            armR.top = ARTBOARD_HEIGHT / 2 - 10;
+            armR.left = ARTBOARD_WIDTH / 2 + 20;
+            armR.rotate(armAngleRight);
+        }
+        
+        if (characterParts.arm_left) {
+            var armL = doc.symbolItems.add(characterParts.arm_left.symbol);
+            armL.top = ARTBOARD_HEIGHT / 2 - 10;
+            armL.left = ARTBOARD_WIDTH / 2 - 20;
+            armL.rotate(armAngleLeft);
+        }
+    }
+}
+
+function generateJumpCycle(doc) {
+    for (var frame = 0; frame < JUMP_FRAMES; frame++) {
+        var artboard = doc.artboards.add([0, 0, ARTBOARD_WIDTH, ARTBOARD_HEIGHT]);
+        artboard.name = "JUMP_" + padZero(frame, 3);
+        
+        var t = frame / JUMP_FRAMES;
+        
+        // Parábola de salto
+        var jumpHeight = Math.sin(t * Math.PI) * -50;
+        
+        if (characterParts.torso) {
+            var torso = doc.symbolItems.add(characterParts.torso.symbol);
+            torso.top = ARTBOARD_HEIGHT / 2 + jumpHeight;
+            torso.left = ARTBOARD_WIDTH / 2;
+        }
+        
+        if (characterParts.head) {
+            var head = doc.symbolItems.add(characterParts.head.symbol);
+            head.top = ARTBOARD_HEIGHT / 2 - 50 + jumpHeight;
+            head.left = ARTBOARD_WIDTH / 2;
+        }
+        
+        // Piernas recogidas en el aire
+        var legAngle = t < 0.3 ? -45 : (t < 0.7 ? 20 : -30);
+        
+        if (characterParts.leg_right) {
+            var legR = doc.symbolItems.add(characterParts.leg_right.symbol);
+            legR.top = ARTBOARD_HEIGHT / 2 + 20 + jumpHeight;
+            legR.left = ARTBOARD_WIDTH / 2 + 10;
+            legR.rotate(legAngle);
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = doc.symbolItems.add(characterParts.leg_left.symbol);
+            legL.top = ARTBOARD_HEIGHT / 2 + 20 + jumpHeight;
+            legL.left = ARTBOARD_WIDTH / 2 - 10;
+            legL.rotate(legAngle);
+        }
+        
+        // Brazos hacia arriba
+        var armAngle = t < 0.5 ? -80 : -40;
+        
+        if (characterParts.arm_right) {
+            var armR = doc.symbolItems.add(characterParts.arm_right.symbol);
+            armR.top = ARTBOARD_HEIGHT / 2 - 10 + jumpHeight;
+            armR.left = ARTBOARD_WIDTH / 2 + 20;
+            armR.rotate(armAngle);
+        }
+        
+        if (characterParts.arm_left) {
+            var armL = doc.symbolItems.add(characterParts.arm_left.symbol);
+            armL.top = ARTBOARD_HEIGHT / 2 - 10 + jumpHeight;
+            armL.left = ARTBOARD_WIDTH / 2 - 20;
+            armL.rotate(armAngle);
+        }
+    }
+}
+
+function generateCrouchCycle(doc) {
+    for (var frame = 0; frame < CROUCH_FRAMES; frame++) {
+        var artboard = doc.artboards.add([0, 0, ARTBOARD_WIDTH, ARTBOARD_HEIGHT]);
+        artboard.name = "CROUCH_" + padZero(frame, 3);
+        
+        var t = frame / (CROUCH_FRAMES - 1);
+        
+        var crouchOffset = t * 30;
+        
+        if (characterParts.torso) {
+            var torso = doc.symbolItems.add(characterParts.torso.symbol);
+            torso.top = ARTBOARD_HEIGHT / 2 + crouchOffset;
+            torso.left = ARTBOARD_WIDTH / 2;
+        }
+        
+        if (characterParts.head) {
+            var head = doc.symbolItems.add(characterParts.head.symbol);
+            head.top = ARTBOARD_HEIGHT / 2 - 50 + crouchOffset + t * 10;
+            head.left = ARTBOARD_WIDTH / 2;
+        }
+        
+        // Piernas dobladas
+        var legBend = t * -60;
+        
+        if (characterParts.leg_right) {
+            var legR = doc.symbolItems.add(characterParts.leg_right.symbol);
+            legR.top = ARTBOARD_HEIGHT / 2 + 20 + crouchOffset;
+            legR.left = ARTBOARD_WIDTH / 2 + 10;
+            legR.rotate(legBend);
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = doc.symbolItems.add(characterParts.leg_left.symbol);
+            legL.top = ARTBOARD_HEIGHT / 2 + 20 + crouchOffset;
+            legL.left = ARTBOARD_WIDTH / 2 - 10;
+            legL.rotate(legBend);
+        }
+        
+        // Brazos adelante
+        if (characterParts.arm_right) {
+            var armR = doc.symbolItems.add(characterParts.arm_right.symbol);
+            armR.top = ARTBOARD_HEIGHT / 2 - 10 + crouchOffset;
+            armR.left = ARTBOARD_WIDTH / 2 + 20;
+            armR.rotate(45);
+        }
+        
+        if (characterParts.arm_left) {
+            var armL = doc.symbolItems.add(characterParts.arm_left.symbol);
+            armL.top = ARTBOARD_HEIGHT / 2 - 10 + crouchOffset;
+            armL.left = ARTBOARD_WIDTH / 2 - 20;
+            armL.rotate(45);
+        }
+    }
+}
+
+function padZero(num, length) {
+    var str = num.toString();
+    while (str.length < length) {
+        str = "0" + str;
+    }
+    return str;
+}
+
+// Ejecutar
+main();
+</pre>
+                        
+                        <hr class="my-6 border-brand-primary/20">
+                        <p class="text-base font-semibold mb-2">Ejemplo 6 (Illustrator): Character Animator - Vista Top-Down</p>
+                        <pre class="code-block">
+// ILLUSTRATOR CHARACTER ANIMATOR - VISTA TOP-DOWN
+// Genera animaciones en 4 direcciones (N, S, E, W)
+
+var WALK_FRAMES = 4;
+var RUN_FRAMES = 4;
+var DIRECTIONS = ["north", "south", "east", "west"];
+var ARTBOARD_SIZE = 400;
+
+var characterParts = {};
+
+function main() {
+    if (app.documents.length === 0) {
+        alert("Abre un documento primero.");
+        return;
+    }
+    
+    var doc = app.activeDocument;
+    
+    alert("ANIMATOR TOP-DOWN\n\nPersonaje debe mirar ABAJO inicialmente.\nSe generarán 4 direcciones.");
+    
+    // Segmentación
+    var partNames = ["head", "body", "arm_right", "arm_left", "leg_right", "leg_left"];
+    
+    for (var i = 0; i < partNames.length; i++) {
+        var partName = partNames[i];
+        alert("Selecciona: " + partName.replace(/_/g, " ").toUpperCase());
+        
+        if (doc.selection.length > 0) {
+            var symbol = doc.symbols.add(doc.selection[0]);
+            symbol.name = partName;
+            characterParts[partName] = symbol;
+            doc.selection[0].hidden = true;
+        }
+    }
+    
+    // Generar animaciones
+    for (var d = 0; d < DIRECTIONS.length; d++) {
+        generateWalkDirection(doc, DIRECTIONS[d]);
+        generateRunDirection(doc, DIRECTIONS[d]);
+    }
+    
+    alert("¡Completado!\nArtboards creados: " + doc.artboards.length);
+}
+
+function getDirectionRotation(direction) {
+    if (direction === "north") return 0;
+    if (direction === "south") return 180;
+    if (direction === "east") return 270;
+    if (direction === "west") return 90;
+    return 0;
+}
+
+function generateWalkDirection(doc, direction) {
+    var rotation = getDirectionRotation(direction);
+    
+    for (var frame = 0; frame < WALK_FRAMES; frame++) {
+        var artboard = doc.artboards.add([0, 0, ARTBOARD_SIZE, ARTBOARD_SIZE]);
+        artboard.name = "WALK_" + direction.toUpperCase() + "_" + padZero(frame, 2);
+        
+        var t = frame / WALK_FRAMES;
+        var headBob = Math.sin(t * Math.PI * 2) * 1;
+        var armSwing = Math.sin(t * Math.PI * 2) * 3;
+        var legSwing = Math.sin(t * Math.PI * 2) * 5;
+        
+        // Cuerpo
+        if (characterParts.body) {
+            var body = doc.symbolItems.add(characterParts.body);
+            body.top = ARTBOARD_SIZE / 2;
+            body.left = ARTBOARD_SIZE / 2;
+            body.rotate(rotation);
+        }
+        
+        // Cabeza
+        if (characterParts.head) {
+            var head = doc.symbolItems.add(characterParts.head);
+            head.top = ARTBOARD_SIZE / 2 - 20 + headBob;
+            head.left = ARTBOARD_SIZE / 2;
+            head.rotate(rotation);
+        }
+        
+        // Brazos
+        if (characterParts.arm_right) {
+            var armR = doc.symbolItems.add(characterParts.arm_right);
+            armR.top = ARTBOARD_SIZE / 2;
+            armR.left = ARTBOARD_SIZE / 2 + 15 + armSwing;
+            armR.rotate(rotation);
+        }
+        
+        if (characterParts.arm_left) {
+            var armL = doc.symbolItems.add(characterParts.arm_left);
+            armL.top = ARTBOARD_SIZE / 2;
+            armL.left = ARTBOARD_SIZE / 2 - 15 - armSwing;
+            armL.rotate(rotation);
+        }
+        
+        // Piernas
+        if (characterParts.leg_right) {
+            var legR = doc.symbolItems.add(characterParts.leg_right);
+            legR.top = ARTBOARD_SIZE / 2 + 30;
+            legR.left = ARTBOARD_SIZE / 2 + 8 + legSwing;
+            legR.rotate(rotation);
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = doc.symbolItems.add(characterParts.leg_left);
+            legL.top = ARTBOARD_SIZE / 2 + 30;
+            legL.left = ARTBOARD_SIZE / 2 - 8 - legSwing;
+            legL.rotate(rotation);
+        }
+    }
+}
+
+function generateRunDirection(doc, direction) {
+    var rotation = getDirectionRotation(direction);
+    
+    for (var frame = 0; frame < RUN_FRAMES; frame++) {
+        var artboard = doc.artboards.add([0, 0, ARTBOARD_SIZE, ARTBOARD_SIZE]);
+        artboard.name = "RUN_" + direction.toUpperCase() + "_" + padZero(frame, 2);
+        
+        var t = frame / RUN_FRAMES;
+        var headBob = Math.sin(t * Math.PI * 2) * 2;
+        var armSwing = Math.sin(t * Math.PI * 2) * 6;
+        var legSwing = Math.sin(t * Math.PI * 2) * 8;
+        
+        if (characterParts.body) {
+            var body = doc.symbolItems.add(characterParts.body);
+            body.top = ARTBOARD_SIZE / 2;
+            body.left = ARTBOARD_SIZE / 2;
+            body.rotate(rotation);
+        }
+        
+        if (characterParts.head) {
+            var head = doc.symbolItems.add(characterParts.head);
+            head.top = ARTBOARD_SIZE / 2 - 20 + headBob;
+            head.left = ARTBOARD_SIZE / 2;
+            head.rotate(rotation);
+        }
+        
+        if (characterParts.arm_right) {
+            var armR = doc.symbolItems.add(characterParts.arm_right);
+            armR.top = ARTBOARD_SIZE / 2;
+            armR.left = ARTBOARD_SIZE / 2 + 15 + armSwing;
+            armR.rotate(rotation);
+        }
+        
+        if (characterParts.arm_left) {
+            var armL = doc.symbolItems.add(characterParts.arm_left);
+            armL.top = ARTBOARD_SIZE / 2;
+            armL.left = ARTBOARD_SIZE / 2 - 15 - armSwing;
+            armL.rotate(rotation);
+        }
+    }
+}
+
+function padZero(num, length) {
+    var str = num.toString();
+    while (str.length < length) {
+        str = "0" + str;
+    }
+    return str;
+}
+
+main();
+</pre>
+
+                        <hr class="my-6 border-brand-primary/20">
+                        <p class="text-base font-semibold mb-2">Ejemplo 7 (Illustrator): Character Animator - Vista Isométrica</p>
+                        <pre class="code-block">
+// ILLUSTRATOR CHARACTER ANIMATOR - VISTA ISOMÉTRICA
+// Genera animaciones en 8 direcciones (N, NE, E, SE, S, SW, W, NW)
+
+var WALK_FRAMES = 8;
+var RUN_FRAMES = 6;
+var JUMP_FRAMES = 12;
+var DIRECTIONS_8 = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+var ARTBOARD_SIZE = 400;
+
+var characterParts = {};
+
+function main() {
+    if (app.documents.length === 0) {
+        alert("Abre un documento primero.");
+        return;
+    }
+    
+    var doc = app.activeDocument;
+    
+    alert("ANIMATOR ISOMÉTRICO\n\nPersonaje en vista 3/4 mirando ABAJO-DERECHA.\n8 direcciones + jump.");
+    
+    // Segmentación
+    var partNames = ["head", "torso", "arm_right", "arm_left", "leg_right", "leg_left"];
+    
+    for (var i = 0; i < partNames.length; i++) {
+        var partName = partNames[i];
+        alert("Selecciona: " + partName.replace(/_/g, " ").toUpperCase());
+        
+        if (doc.selection.length > 0) {
+            var symbol = doc.symbols.add(doc.selection[0]);
+            symbol.name = partName;
+            characterParts[partName] = symbol;
+            doc.selection[0].hidden = true;
+        }
+    }
+    
+    // Generar animaciones
+    for (var d = 0; d < DIRECTIONS_8.length; d++) {
+        generateWalkIso(doc, DIRECTIONS_8[d]);
+        generateRunIso(doc, DIRECTIONS_8[d]);
+    }
+    
+    generateJumpIso(doc);
+    
+    alert("¡Completado!\nArtboards: " + doc.artboards.length);
+}
+
+function getIsoTransform(direction) {
+    var transforms = {
+        N:  {angle: 0,   dirX: 0,  dirY: -1},
+        NE: {angle: 45,  dirX: 1,  dirY: -1},
+        E:  {angle: 90,  dirX: 1,  dirY: 0},
+        SE: {angle: 135, dirX: 1,  dirY: 1},
+        S:  {angle: 180, dirX: 0,  dirY: 1},
+        SW: {angle: 225, dirX: -1, dirY: 1},
+        W:  {angle: 270, dirX: -1, dirY: 0},
+        NW: {angle: 315, dirX: -1, dirY: -1}
+    };
+    return transforms[direction];
+}
+
+function generateWalkIso(doc, direction) {
+    var iso = getIsoTransform(direction);
+    
+    for (var frame = 0; frame < WALK_FRAMES; frame++) {
+        var artboard = doc.artboards.add([0, 0, ARTBOARD_SIZE, ARTBOARD_SIZE]);
+        artboard.name = "WALK_" + direction + "_" + padZero(frame, 2);
+        
+        var t = frame / WALK_FRAMES;
+        var bobY = Math.abs(Math.sin(t * Math.PI * 2)) * 2;
+        var legPhase = Math.sin(t * Math.PI * 2);
+        var armPhase = Math.sin((t + 0.5) * Math.PI * 2);
+        
+        // Torso
+        if (characterParts.torso) {
+            var torso = doc.symbolItems.add(characterParts.torso);
+            torso.top = ARTBOARD_SIZE / 2;
+            torso.left = ARTBOARD_SIZE / 2;
+            torso.rotate(iso.angle);
+        }
+        
+        // Cabeza
+        if (characterParts.head) {
+            var head = doc.symbolItems.add(characterParts.head);
+            head.top = ARTBOARD_SIZE / 2 - 30 - bobY;
+            head.left = ARTBOARD_SIZE / 2;
+            head.rotate(iso.angle);
+        }
+        
+        // Piernas
+        if (characterParts.leg_right) {
+            var legR = doc.symbolItems.add(characterParts.leg_right);
+            legR.top = ARTBOARD_SIZE / 2 + 20 + legPhase * 1.5 * iso.dirY;
+            legR.left = ARTBOARD_SIZE / 2 + 10 + legPhase * 3 * iso.dirX;
+            legR.rotate(iso.angle);
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = doc.symbolItems.add(characterParts.leg_left);
+            legL.top = ARTBOARD_SIZE / 2 + 20 - legPhase * 1.5 * iso.dirY;
+            legL.left = ARTBOARD_SIZE / 2 - 10 - legPhase * 3 * iso.dirX;
+            legL.rotate(iso.angle);
+        }
+        
+        // Brazos
+        if (characterParts.arm_right) {
+            var armR = doc.symbolItems.add(characterParts.arm_right);
+            armR.top = ARTBOARD_SIZE / 2 + armPhase * 1 * iso.dirY;
+            armR.left = ARTBOARD_SIZE / 2 + 20 + armPhase * 2 * iso.dirX;
+            armR.rotate(iso.angle);
+        }
+        
+        if (characterParts.arm_left) {
+            var armL = doc.symbolItems.add(characterParts.arm_left);
+            armL.top = ARTBOARD_SIZE / 2 - armPhase * 1 * iso.dirY;
+            armL.left = ARTBOARD_SIZE / 2 - 20 - armPhase * 2 * iso.dirX;
+            armL.rotate(iso.angle);
+        }
+    }
+}
+
+function generateRunIso(doc, direction) {
+    var iso = getIsoTransform(direction);
+    
+    for (var frame = 0; frame < RUN_FRAMES; frame++) {
+        var artboard = doc.artboards.add([0, 0, ARTBOARD_SIZE, ARTBOARD_SIZE]);
+        artboard.name = "RUN_" + direction + "_" + padZero(frame, 2);
+        
+        var t = frame / RUN_FRAMES;
+        var bobY = Math.abs(Math.sin(t * Math.PI * 2)) * 4;
+        var legPhase = Math.sin(t * Math.PI * 2);
+        
+        var leanX = 2 * iso.dirX;
+        var leanY = 1 * iso.dirY;
+        
+        if (characterParts.torso) {
+            var torso = doc.symbolItems.add(characterParts.torso);
+            torso.top = ARTBOARD_SIZE / 2 + leanY;
+            torso.left = ARTBOARD_SIZE / 2 + leanX;
+            torso.rotate(iso.angle);
+        }
+        
+        if (characterParts.head) {
+            var head = doc.symbolItems.add(characterParts.head);
+            head.top = ARTBOARD_SIZE / 2 - 30 - bobY + leanY;
+            head.left = ARTBOARD_SIZE / 2 + leanX;
+            head.rotate(iso.angle);
+        }
+        
+        if (characterParts.leg_right) {
+            var legR = doc.symbolItems.add(characterParts.leg_right);
+            legR.top = ARTBOARD_SIZE / 2 + 20 + legPhase * 3 * iso.dirY;
+            legR.left = ARTBOARD_SIZE / 2 + 10 + legPhase * 6 * iso.dirX;
+            legR.rotate(iso.angle);
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = doc.symbolItems.add(characterParts.leg_left);
+            legL.top = ARTBOARD_SIZE / 2 + 20 - legPhase * 3 * iso.dirY;
+            legL.left = ARTBOARD_SIZE / 2 - 10 - legPhase * 6 * iso.dirX;
+            legL.rotate(iso.angle);
+        }
+    }
+}
+
+function generateJumpIso(doc) {
+    for (var frame = 0; frame < JUMP_FRAMES; frame++) {
+        var artboard = doc.artboards.add([0, 0, ARTBOARD_SIZE, ARTBOARD_SIZE]);
+        artboard.name = "JUMP_ISO_" + padZero(frame, 2);
+        
+        var t = frame / JUMP_FRAMES;
+        var jumpHeight = Math.sin(t * Math.PI) * -30;
+        
+        if (characterParts.torso) {
+            var torso = doc.symbolItems.add(characterParts.torso);
+            torso.top = ARTBOARD_SIZE / 2 + jumpHeight;
+            torso.left = ARTBOARD_SIZE / 2;
+        }
+        
+        if (characterParts.head) {
+            var head = doc.symbolItems.add(characterParts.head);
+            head.top = ARTBOARD_SIZE / 2 - 30 + jumpHeight;
+            head.left = ARTBOARD_SIZE / 2;
+        }
+        
+        var legExtend = t < 0.5 ? t * 2 : (1 - t) * 2;
+        
+        if (characterParts.leg_right) {
+            var legR = doc.symbolItems.add(characterParts.leg_right);
+            legR.top = ARTBOARD_SIZE / 2 + 20 + jumpHeight + legExtend * 5;
+            legR.left = ARTBOARD_SIZE / 2 + 10 + legExtend * 3;
+        }
+        
+        if (characterParts.leg_left) {
+            var legL = doc.symbolItems.add(characterParts.leg_left);
+            legL.top = ARTBOARD_SIZE / 2 + 20 + jumpHeight + legExtend * 5;
+            legL.left = ARTBOARD_SIZE / 2 - 10 - legExtend * 3;
+        }
+    }
+}
+
+function padZero(num, length) {
+    var str = num.toString();
+    while (str.length < length) {
+        str = "0" + str;
+    }
+    return str;
+}
+
+main();
+</pre>
+                    </div>
+                    
+                    <div id="subview-auto-gimp" class="auto-sub-view hidden">
+                        <h3 class="text-2xl font-bold text-brand-accent mb-4">GIMP (Python-Fu)</h3>
+                        <p class="text-lg mb-4">GIMP es increíblemente potente para scripting usando <strong>Python</strong> (llamado Python-Fu) o <strong>Scheme</strong> (Script-Fu). Los scripts se guardan en la carpeta de plugins de GIMP.</p>
+                        
+                        <p class="text-base font-semibold mb-2">Ejemplo 1 (Python-Fu): Convertidor a Pixel Art</p>
+                        <pre class="code-block">
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Pixel Art Converter para GIMP
+Estilo: Zelda ALTTP / Stardew Valley
+
+Instalación:
+1. Linux: ~/.config/GIMP/2.10/plug-ins/
+2. Windows: C:\Users\[Usuario]\AppData\Roaming\GIMP\2.10\plug-ins\
+3. Mac: ~/Library/Application Support/GIMP/2.10/plug-ins/
+
+Uso:
+Filters > Pixel Art > Convert to Pixel Art
+"""
+
+from gimpfu import *
+
+def convert_to_pixel_art(image, drawable, pixel_size, color_levels, add_dithering):
+    """
+    Convierte la imagen a pixel art estilo retro SNES
+    
+    Args:
+        image: La imagen actual
+        drawable: La capa activa
+        pixel_size: Tamaño del pixel (recomendado 6-8)
+        color_levels: Niveles de color por canal (recomendado 8-16)
+        add_dithering: Activar dithering para transiciones
+    """
+    
+    # Iniciar grupo de deshacer
+    pdb.gimp_image_undo_group_start(image)
+    
+    try:
+        # 1. Aplanar imagen
+        if len(image.layers) > 1:
+            pdb.gimp_image_flatten(image)
+            drawable = pdb.gimp_image_get_active_layer(image)
+        
+        # 2. Convertir a RGB si no lo está
+        if pdb.gimp_image_base_type(image) != RGB:
+            pdb.gimp_image_convert_rgb(image)
+        
+        # 3. Obtener dimensiones originales
+        original_width = drawable.width
+        original_height = drawable.height
+        
+        # 4. Calcular nueva resolución (downscale)
+        small_width = max(16, int(original_width / pixel_size))
+        small_height = max(16, int(original_height / pixel_size))
+        
+        # 5. Escalar hacia abajo (INTERPOLATION_NONE = nearest neighbor)
+        pdb.gimp_image_scale_full(image, small_width, small_height, INTERPOLATION_NONE)
+        drawable = pdb.gimp_image_get_active_layer(image)
+        
+        # 6. Posterizar colores
+        if color_levels < 256:
+            pdb.gimp_posterize(drawable, color_levels)
+        
+        # 7. Dithering opcional
+        if add_dithering:
+            # Convertir a indexed con dithering y volver a RGB
+            num_colors = min(256, color_levels * color_levels)
+            pdb.gimp_image_convert_indexed(
+                image,
+                CONVERT_DITHER_FS,      # Floyd-Steinberg dithering
+                CONVERT_PALETTE_GENERATE,
+                num_colors,
+                False,                  # No usar alpha como dither mask
+                False,                  # No remover colores no usados
+                ""                      # Paleta personalizada (vacío)
+            )
+            # Convertir de vuelta a RGB
+            pdb.gimp_image_convert_rgb(image)
+            drawable = pdb.gimp_image_get_active_layer(image)
+        
+        # 8. Escalar de vuelta al tamaño original (upscale)
+        pdb.gimp_image_scale_full(image, original_width, original_height, INTERPOLATION_NONE)
+        drawable = pdb.gimp_image_get_active_layer(image)
+        
+        # 9. Aplicar ligero sharpen para definir bordes
+        pdb.plug_in_sharpen(image, drawable, 50)
+        
+        # Actualizar display
+        pdb.gimp_displays_flush()
+        
+    except Exception as e:
+        pdb.gimp_message("Error en conversión: " + str(e))
+    
+    finally:
+        # Finalizar grupo de deshacer
+        pdb.gimp_image_undo_group_end(image)
+
+
+# Registro del plugin
+register(
+    "python_fu_pixel_art_converter",
+    "Convierte imágenes a pixel art estilo SNES/Stardew Valley",
+    "Reduce resolución, posteriza colores y escala con nearest neighbor para crear efecto pixel art retro",
+    "Tu Nombre",
+    "Tu Nombre",
+    "2025",
+    "<Image>/Filters/Pixel Art/Convert to Pixel Art",
+    "RGB*, GRAY*",
+    [
+        (PF_SPINNER, "pixel_size", "Tamaño del pixel:", 6, (2, 16, 1)),
+        (PF_SPINNER, "color_levels", "Niveles de color:", 8, (4, 64, 1)),
+        (PF_TOGGLE, "add_dithering", "Activar dithering:", False)
+    ],
+    [],
+    convert_to_pixel_art
+)
+
+main()
+</pre>
+                        
+                        <hr class="my-6 border-brand-primary/20">
+
+                        <p class="text-base font-semibold mb-2">Ejemplo 2 (Python-Fu): Character Animator - Vista Lateral</p>
+                        <pre class="code-block">
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+GIMP CHARACTER ANIMATOR - VISTA LATERAL (PLATFORMER)
+Genera animaciones automáticas: walk, run, jump, crouch
+
+Instalación:
+- Linux/Mac: ~/.config/GIMP/2.10/plug-ins/
+- Windows: C:\Users\[Usuario]\AppData\Roaming\GIMP\2.10\plug-ins\
+
+Uso: Filters > Animation > Character Animator (Side View)
+"""
+
+from gimpfu import *
+import math
+
+# Configuración
+WALK_FRAMES = 8
+RUN_FRAMES = 6
+JUMP_FRAMES = 10
+CROUCH_FRAMES = 4
+
+def segment_character_interactive(image):
+    """
+    Segmenta el personaje en partes mediante selecciones del usuario
+    """
+    parts = {}
+    part_names = [
+        ("head", "Cabeza"),
+        ("torso", "Torso"),
+        ("arm_right", "Brazo derecho"),
+        ("arm_left", "Brazo izquierdo"),
+        ("leg_right", "Pierna derecha"),
+        ("leg_left", "Pierna izquierda"),
+        ("foot_right", "Pie derecho"),
+        ("foot_left", "Pie izquierdo")
+    ]
+    
+    pdb.gimp_message("SEGMENTACIÓN\n\nVas a seleccionar cada parte del personaje.\nUsa las herramientas de selección.")
+    
+    for part_id, part_display in part_names:
+        # Solicitar al usuario que haga una selección
+        pdb.gimp_message("Selecciona: " + part_display + "\n\nUsa cualquier herramienta de selección.\nHaz clic en OK cuando termines.")
+        
+        # Verificar que hay una selección
+        non_empty, x1, y1, x2, y2 = pdb.gimp_selection_bounds(image)
+        
+        if not non_empty:
+            pdb.gimp_message("No se detectó selección para " + part_display)
+            continue
+        
+        # Copiar selección a nueva capa
+        pdb.gimp_edit_copy(image.active_layer)
+        floating = pdb.gimp_edit_paste(image.active_layer, True)
+        new_layer = pdb.gimp_floating_sel_to_layer(floating)
+        new_layer.name = part_id
+        
+        parts[part_id] = {
+            'layer': new_layer,
+            'pivot_x': (x1 + x2) / 2,
+            'pivot_y': y2  # Parte inferior como pivote
+        }
+        
+        pdb.gimp_selection_none(image)
+    
+    return parts
+
+def create_walk_cycle(image, parts):
+    """
+    Genera ciclo de caminata
+    """
+    group = pdb.gimp_layer_group_new(image)
+    group.name = "WALK_CYCLE"
+    pdb.gimp_image_insert_layer(image, group, None, 0)
+    
+    for frame in range(WALK_FRAMES):
+        frame_group = pdb.gimp_layer_group_new(image)
+        frame_group.name = "walk_{:03d}".format(frame)
+        pdb.gimp_image_insert_layer(image, frame_group, group, 0)
+        
+        t = float(frame) / WALK_FRAMES
+        
+        # Oscilar torso y cabeza
+        bob_y = math.sin(t * math.pi * 4) * 2
+        
+        # Duplicar partes y aplicar transformaciones
+        if 'torso' in parts:
+            torso_copy = pdb.gimp_layer_copy(parts['torso']['layer'], True)
+            pdb.gimp_image_insert_layer(image, torso_copy, frame_group, 0)
+            pdb.gimp_layer_translate(torso_copy, 0, bob_y)
+        
+        if 'head' in parts:
+            head_copy = pdb.gimp_layer_copy(parts['head']['layer'], True)
+            pdb.gimp_image_insert_layer(image, head_copy, frame_group, 0)
+            pdb.gimp_layer_translate(head_copy, 0, bob_y - 5)
+        
+        # Piernas con fase opuesta
+        leg_angle_right = math.sin(t * math.pi * 2) * 30
+        leg_angle_left = math.sin((t + 0.5) * math.pi * 2) * 30
+        
+        if 'leg_right' in parts:
+            leg_r = pdb.gimp_layer_copy(parts['leg_right']['layer'], True)
+            pdb.gimp_image_insert_layer(image, leg_r, frame_group, 0)
+            rotate_layer_around_pivot(leg_r, leg_angle_right, 
+                                      parts['leg_right']['pivot_x'],
+                                      parts['leg_right']['pivot_y'])
+        
+        if 'leg_left' in parts:
+            leg_l = pdb.gimp_layer_copy(parts['leg_left']['layer'], True)
+            pdb.gimp_image_insert_layer(image, leg_l, frame_group, 0)
+            rotate_layer_around_pivot(leg_l, leg_angle_left,
+                                      parts['leg_left']['pivot_x'],
+                                      parts['leg_left']['pivot_y'])
+        
+        # Brazos en fase opuesta a piernas
+        arm_angle_right = math.sin((t + 0.5) * math.pi * 2) * 25
+        arm_angle_left = math.sin(t * math.pi * 2) * 25
+        
+        if 'arm_right' in parts:
+            arm_r = pdb.gimp_layer_copy(parts['arm_right']['layer'], True)
+            pdb.gimp_image_insert_layer(image, arm_r, frame_group, 0)
+            rotate_layer_around_pivot(arm_r, arm_angle_right,
+                                      parts['arm_right']['pivot_x'],
+                                      parts['arm_right']['pivot_y'])
+        
+        if 'arm_left' in parts:
+            arm_l = pdb.gimp_layer_copy(parts['arm_left']['layer'], True)
+            pdb.gimp_image_insert_layer(image, arm_l, frame_group, 0)
+            rotate_layer_around_pivot(arm_l, arm_angle_left,
+                                      parts['arm_left']['pivot_x'],
+                                      parts['arm_left']['pivot_y'])
+        
+        # Pies
+        if 'foot_right' in parts:
+            foot_r = pdb.gimp_layer_copy(parts['foot_right']['layer'], True)
+            pdb.gimp_image_insert_layer(image, foot_r, frame_group, 0)
+            pdb.gimp_layer_translate(foot_r, 0, math.sin(t * math.pi * 2) * 8)
+        
+        if 'foot_left' in parts:
+            foot_l = pdb.gimp_layer_copy(parts['foot_left']['layer'], True)
+            pdb.gimp_image_insert_layer(image, foot_l, frame_group, 0)
+            pdb.gimp_layer_translate(foot_l, 0, math.sin((t + 0.5) * math.pi * 2) * 8)
+
+def create_run_cycle(image, parts):
+    """
+    Genera ciclo de carrera
+    """
+    group = pdb.gimp_layer_group_new(image)
+    group.name = "RUN_CYCLE"
+    pdb.gimp_image_insert_layer(image, group, None, 0)
+    
+    for frame in range(RUN_FRAMES):
+        frame_group = pdb.gimp_layer_group_new(image)
+        frame_group.name = "run_{:03d}".format(frame)
+        pdb.gimp_image_insert_layer(image, frame_group, group, 0)
+        
+        t = float(frame) / RUN_FRAMES
+        
+        # Inclinación hacia adelante
+        lean_x = 5
+        
+        # Movimiento más pronunciado
+        if 'torso' in parts:
+            torso_copy = pdb.gimp_layer_copy(parts['torso']['layer'], True)
+            pdb.gimp_image_insert_layer(image, torso_copy, frame_group, 0)
+            pdb.gimp_layer_translate(torso_copy, lean_x, 0)
+        
+        if 'head' in parts:
+            head_copy = pdb.gimp_layer_copy(parts['head']['layer'], True)
+            pdb.gimp_image_insert_layer(image, head_copy, frame_group, 0)
+            pdb.gimp_layer_translate(head_copy, lean_x, -5)
+        
+        # Amplitud mayor en piernas y brazos
+        leg_angle_right = math.sin(t * math.pi * 2) * 45
+        leg_angle_left = math.sin((t + 0.5) * math.pi * 2) * 45
+        
+        arm_angle_right = math.sin((t + 0.5) * math.pi * 2) * 40
+        arm_angle_left = math.sin(t * math.pi * 2) * 40
+        
+        if 'leg_right' in parts:
+            leg_r = pdb.gimp_layer_copy(parts['leg_right']['layer'], True)
+            pdb.gimp_image_insert_layer(image, leg_r, frame_group, 0)
+            rotate_layer_around_pivot(leg_r, leg_angle_right,
+                                      parts['leg_right']['pivot_x'],
+                                      parts['leg_right']['pivot_y'])
+        
+        if 'leg_left' in parts:
+            leg_l = pdb.gimp_layer_copy(parts['leg_left']['layer'], True)
+            pdb.gimp_image_insert_layer(image, leg_l, frame_group, 0)
+            rotate_layer_around_pivot(leg_l, leg_angle_left,
+                                      parts['leg_left']['pivot_x'],
+                                      parts['leg_left']['pivot_y'])
+
+def create_jump_cycle(image, parts):
+    """
+    Genera ciclo de salto
+    """
+    group = pdb.gimp_layer_group_new(image)
+    group.name = "JUMP_CYCLE"
+    pdb.gimp_image_insert_layer(image, group, None, 0)
+    
+    for frame in range(JUMP_FRAMES):
+        frame_group = pdb.gimp_layer_group_new(image)
+        frame_group.name = "jump_{:03d}".format(frame)
+        pdb.gimp_image_insert_layer(image, frame_group, group, 0)
+        
+        t = float(frame) / JUMP_FRAMES
+        
+        # Parábola de salto
+        jump_height = math.sin(t * math.pi) * -50
+        
+        # Determinar fase del salto
+        if t < 0.3:
+            leg_angle = -45  # Preparación
+        elif t < 0.7:
+            leg_angle = 20   # Vuelo
+        else:
+            leg_angle = -30  # Aterrizaje
+        
+        if 'torso' in parts:
+            torso_copy = pdb.gimp_layer_copy(parts['torso']['layer'], True)
+            pdb.gimp_image_insert_layer(image, torso_copy, frame_group, 0)
+            pdb.gimp_layer_translate(torso_copy, 0, jump_height)
+        
+        if 'head' in parts:
+            head_copy = pdb.gimp_layer_copy(parts['head']['layer'], True)
+            pdb.gimp_image_insert_layer(image, head_copy, frame_group, 0)
+            pdb.gimp_layer_translate(head_copy, 0, jump_height - 5)
+        
+        if 'leg_right' in parts:
+            leg_r = pdb.gimp_layer_copy(parts['leg_right']['layer'], True)
+            pdb.gimp_image_insert_layer(image, leg_r, frame_group, 0)
+            pdb.gimp_layer_translate(leg_r, 0, jump_height)
+            rotate_layer_around_pivot(leg_r, leg_angle,
+                                      parts['leg_right']['pivot_x'],
+                                      parts['leg_right']['pivot_y'])
+
+def create_crouch_cycle(image, parts):
+    """
+    Genera ciclo de agacharse
+    """
+    group = pdb.gimp_layer_group_new(image)
+    group.name = "CROUCH_CYCLE"
+    pdb.gimp_image_insert_layer(image, group, None, 0)
+    
+    for frame in range(CROUCH_FRAMES):
+        frame_group = pdb.gimp_layer_group_new(image)
+        frame_group.name = "crouch_{:03d}".format(frame)
+        pdb.gimp_image_insert_layer(image, frame_group, group, 0)
+        
+        t = float(frame) / (CROUCH_FRAMES - 1)
+        
+        crouch_offset = t * 30
+        leg_bend = t * -60
+        
+        if 'torso' in parts:
+            torso_copy = pdb.gimp_layer_copy(parts['torso']['layer'], True)
+            pdb.gimp_image_insert_layer(image, torso_copy, frame_group, 0)
+            pdb.gimp_layer_translate(torso_copy, 0, crouch_offset)
+        
+        if 'head' in parts:
+            head_copy = pdb.gimp_layer_copy(parts['head']['layer'], True)
+            pdb.gimp_image_insert_layer(image, head_copy, frame_group, 0)
+            pdb.gimp_layer_translate(head_copy, 0, crouch_offset - 10)
+        
+        if 'leg_right' in parts:
+            leg_r = pdb.gimp_layer_copy(parts['leg_right']['layer'], True)
+            pdb.gimp_image_insert_layer(image, leg_r, frame_group, 0)
+            rotate_layer_around_pivot(leg_r, leg_bend,
+                                      parts['leg_right']['pivot_x'],
+                                      parts['leg_right']['pivot_y'])
+
+def rotate_layer_around_pivot(layer, angle, pivot_x, pivot_y):
+    """
+    Rota una capa alrededor de un punto de pivote
+    """
+    # Nota: GIMP no tiene rotación nativa con pivote personalizado en Python-Fu
+    # Esta es una implementación simplificada
+    # En producción, se usaría transformación matricial
+    
+    pdb.gimp_item_transform_rotate(layer, math.radians(angle), 
+                                   False, pivot_x, pivot_y)
+
+def character_animator_side(image, drawable):
+    """
+    Función principal del animator
+    """
+    pdb.gimp_image_undo_group_start(image)
+    
+    try:
+        # Paso 1: Segmentar personaje
+        parts = segment_character_interactive(image)
+        
+        if len(parts) == 0:
+            pdb.gimp_message("No se segmentaron partes del personaje.")
+            return
+        
+        # Ocultar capa original
+        drawable.visible = False
+        
+        # Paso 2: Generar animaciones
+        create_walk_cycle(image, parts)
+        create_run_cycle(image, parts)
+        create_jump_cycle(image, parts)
+        create_crouch_cycle(image, parts)
+        
+        pdb.gimp_displays_flush()
+        pdb.gimp_message("¡Animación completada!\n\nSe crearon 4 grupos:\n- WALK_CYCLE\n- RUN_CYCLE\n- JUMP_CYCLE\n- CROUCH_CYCLE")
+        
+    except Exception as e:
+        pdb.gimp_message("Error: " + str(e))
+    
+    finally:
+        pdb.gimp_image_undo_group_end(image)
+
+# Registro del plugin
+register(
+    "python_fu_character_animator_side",
+    "Genera animaciones automáticas para personajes en vista lateral",
+    "Segmenta y anima personajes: walk, run, jump, crouch",
+    "Tu Nombre",
+    "Tu Nombre",
+    "2025",
+    "<Image>/Filters/Animation/Character Animator (Side View)",
+    "RGB*, GRAY*",
+    [],
+    [],
+    character_animator_side
+)
+
+main()
+</pre>
+                        
+                        <hr class="my-6 border-brand-primary/20">
+                        <p class="text-base font-semibold mb-2">Ejemplo 3 (Python-Fu): Character Animator - Vista Top-Down</p>
+                        <pre class="code-block">
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+GIMP CHARACTER ANIMATOR - VISTA TOP-DOWN (ESTILO ZELDA)
+Genera animaciones en 4 direcciones: N, S, E, W
+
+Instalación: ~/.config/GIMP/2.10/plug-ins/
+Uso: Filters > Animation > Character Animator (Top-Down)
+"""
+
+from gimpfu import *
+import math
+
+WALK_FRAMES = 4
+RUN_FRAMES = 4
+DIRECTIONS = ["north", "south", "east", "west"]
+
+def segment_topdown(image):
+    parts = {}
+    part_names = [
+        ("head", "Cabeza"),
+        ("body", "Cuerpo"),
+        ("arm_right", "Brazo derecho"),
+        ("arm_left", "Brazo izquierdo"),
+        ("leg_right", "Pierna derecha"),
+        ("leg_left", "Pierna izquierda")
+    ]
+    
+    pdb.gimp_message("SEGMENTACIÓN TOP-DOWN\n\nPersonaje debe mirar ABAJO inicialmente")
+    
+    for part_id, part_display in part_names:
+        pdb.gimp_message("Selecciona: " + part_display)
+        
+        non_empty, x1, y1, x2, y2 = pdb.gimp_selection_bounds(image)
+        if not non_empty:
+            continue
+        
+        pdb.gimp_edit_copy(image.active_layer)
+        floating = pdb.gimp_edit_paste(image.active_layer, True)
+        new_layer = pdb.gimp_floating_sel_to_layer(floating)
+        new_layer.name = part_id
+        
+        parts[part_id] = {
+            'layer': new_layer,
+            'center_x': (x1 + x2) / 2,
+            'center_y': (y1 + y2) / 2
+        }
+        
+        pdb.gimp_selection_none(image)
+    
+    return parts
+
+def get_direction_rotation(direction):
+    rotations = {
+        "north": 0,
+        "south": 180,
+        "east": 270,
+        "west": 90
+    }
+    return rotations.get(direction, 0)
+
+def create_walk_direction(image, parts, direction):
+    group = pdb.gimp_layer_group_new(image)
+    group.name = "WALK_" + direction.upper()
+    pdb.gimp_image_insert_layer(image, group, None, 0)
+    
+    rotation = get_direction_rotation(direction)
+    
+    for frame in range(WALK_FRAMES):
+        frame_group = pdb.gimp_layer_group_new(image)
+        frame_group.name = "walk_{}_{:02d}".format(direction, frame)
+        pdb.gimp_image_insert_layer(image, frame_group, group, 0)
+        
+        t = float(frame) / WALK_FRAMES
+        
+        head_bob = math.sin(t * math.pi * 2) * 1
+        arm_swing = math.sin(t * math.pi * 2) * 3
+        leg_swing = math.sin(t * math.pi * 2) * 5
+        
+        for part_name, part_data in parts.items():
+            part_copy = pdb.gimp_layer_copy(part_data['layer'], True)
+            pdb.gimp_image_insert_layer(image, part_copy, frame_group, 0)
+            
+            # Rotar según dirección
+            pdb.gimp_item_transform_rotate(part_copy, math.radians(rotation),
+                                           False, part_data['center_x'], part_data['center_y'])
+            
+            # Aplicar animación específica
+            if part_name == "head":
+                pdb.gimp_layer_translate(part_copy, 0, head_bob)
+            elif part_name == "arm_right":
+                pdb.gimp_layer_translate(part_copy, arm_swing, 0)
+            elif part_name == "arm_left":
+                pdb.gimp_layer_translate(part_copy, -arm_swing, 0)
+            elif part_name == "leg_right":
+                pdb.gimp_layer_translate(part_copy, leg_swing, 0)
+            elif part_name == "leg_left":
+                pdb.gimp_layer_translate(part_copy, -leg_swing, 0)
+
+def create_run_direction(image, parts, direction):
+    group = pdb.gimp_layer_group_new(image)
+    group.name = "RUN_" + direction.upper()
+    pdb.gimp_image_insert_layer(image, group, None, 0)
+    
+    rotation = get_direction_rotation(direction)
+    
+    for frame in range(RUN_FRAMES):
+        frame_group = pdb.gimp_layer_group_new(image)
+        frame_group.name = "run_{}_{:02d}".format(direction, frame)
+        pdb.gimp_image_insert_layer(image, frame_group, group, 0)
+        
+        t = float(frame) / RUN_FRAMES
+        
+        head_bob = math.sin(t * math.pi * 2) * 2
+        arm_swing = math.sin(t * math.pi * 2) * 6
+        leg_swing = math.sin(t * math.pi * 2) * 8
+        
+        for part_name, part_data in parts.items():
+            part_copy = pdb.gimp_layer_copy(part_data['layer'], True)
+            pdb.gimp_image_insert_layer(image, part_copy, frame_group, 0)
+            
+            pdb.gimp_item_transform_rotate(part_copy, math.radians(rotation),
+                                           False, part_data['center_x'], part_data['center_y'])
+            
+            if part_name == "head":
+                pdb.gimp_layer_translate(part_copy, 0, head_bob)
+            elif part_name == "arm_right":
+                pdb.gimp_layer_translate(part_copy, arm_swing, 0)
+            elif part_name == "arm_left":
+                pdb.gimp_layer_translate(part_copy, -arm_swing, 0)
+
+def character_animator_topdown(image, drawable):
+    pdb.gimp_image_undo_group_start(image)
+    
+    try:
+        parts = segment_topdown(image)
+        
+        if len(parts) == 0:
+            pdb.gimp_message("No se segmentaron partes")
+            return
+        
+        drawable.visible = False
+        
+        for direction in DIRECTIONS:
+            create_walk_direction(image, parts, direction)
+            create_run_direction(image, parts, direction)
+        
+        pdb.gimp_displays_flush()
+        pdb.gimp_message("¡Completado!\n\n8 grupos creados para 4 direcciones")
+        
+    except Exception as e:
+        pdb.gimp_message("Error: " + str(e))
+    
+    finally:
+        pdb.gimp_image_undo_group_end(image)
+
+register(
+    "python_fu_character_animator_topdown",
+    "Genera animaciones top-down en 4 direcciones",
+    "Walk y Run para N, S, E, W",
+    "Tu Nombre",
+    "Tu Nombre",
+    "2025",
+    "<Image>/Filters/Animation/Character Animator (Top-Down)",
+    "RGB*, GRAY*",
+    [],
+    [],
+    character_animator_topdown
+)
+
+main()
+</pre>
+
+                        <hr class="my-6 border-brand-primary/20">
+                        <p class="text-base font-semibold mb-2">Ejemplo 4 (Python-Fu): Character Animator - Vista Isométrica</p>
+                        <pre class="code-block">
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+GIMP CHARACTER ANIMATOR - VISTA ISOMÉTRICA
+Genera animaciones en 8 direcciones: N, NE, E, SE, S, SW, W, NW
+
+Instalación: ~/.config/GIMP/2.10/plug-ins/
+Uso: Filters > Animation > Character Animator (Isometric)
+"""
+
+from gimpfu import *
+import math
+
+WALK_FRAMES = 8
+RUN_FRAMES = 6
+JUMP_FRAMES = 12
+DIRECTIONS_8 = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+
+def segment_isometric(image):
+    parts = {}
+    part_names = [
+        ("head", "Cabeza"),
+        ("torso", "Torso"),
+        ("arm_right", "Brazo derecho"),
+        ("arm_left", "Brazo izquierdo"),
+        ("leg_right", "Pierna derecha"),
+        ("leg_left", "Pierna izquierda")
+    ]
+    
+    pdb.gimp_message("SEGMENTACIÓN ISOMÉTRICA\n\nPersonaje en vista 3/4 mirando ABAJO-DERECHA (SE)")
+    
+    for part_id, part_display in part_names:
+        pdb.gimp_message("Selecciona: " + part_display)
+        
+        non_empty, x1, y1, x2, y2 = pdb.gimp_selection_bounds(image)
+        if not non_empty:
+            continue
+        
+        pdb.gimp_edit_copy(image.active_layer)
+        floating = pdb.gimp_edit_paste(image.active_layer, True)
+        new_layer = pdb.gimp_floating_sel_to_layer(floating)
+        new_layer.name = part_id
+        
+        parts[part_id] = {
+            'layer': new_layer,
+            'center_x': (x1 + x2) / 2,
+            'center_y': (y1 + y2) / 2
+        }
+        
+        pdb.gimp_selection_none(image)
+    
+    return parts
+
+def get_iso_transform(direction):
+    transforms = {
+        "N":  {"angle": 0,   "dirX": 0,  "dirY": -1},
+        "NE": {"angle": 45,  "dirX": 1,  "dirY": -1},
+        "E":  {"angle": 90,  "dirX": 1,  "dirY": 0},
+        "SE": {"angle": 135, "dirX": 1,  "dirY": 1},
+        "S":  {"angle": 180, "dirX": 0,  "dirY": 1},
+        "SW": {"angle": 225, "dirX": -1, "dirY": 1},
+        "W":  {"angle": 270, "dirX": -1, "dirY": 0},
+        "NW": {"angle": 315, "dirX": -1, "dirY": -1}
+    }
+    return transforms.get(direction, transforms["SE"])
+
+def create_walk_iso(image, parts, direction):
+    group = pdb.gimp_layer_group_new(image)
+    group.name = "WALK_" + direction
+    pdb.gimp_image_insert_layer(image, group, None, 0)
+    
+    iso = get_iso_transform(direction)
+    
+    for frame in range(WALK_FRAMES):
+        frame_group = pdb.gimp_layer_group_new(image)
+        frame_group.name = "walk_{}_{:02d}".format(direction, frame)
+        pdb.gimp_image_insert_layer(image, frame_group, group, 0)
+        
+        t = float(frame) / WALK_FRAMES
+        
+        bob_y = abs(math.sin(t * math.pi * 2)) * 2
+        leg_phase = math.sin(t * math.pi * 2)
+        arm_phase = math.sin((t + 0.5) * math.pi * 2)
+        
+        for part_name, part_data in parts.items():
+            part_copy = pdb.gimp_layer_copy(part_data['layer'], True)
+            pdb.gimp_image_insert_layer(image, part_copy, frame_group, 0)
+            
+            # Rotar según dirección isométrica
+            pdb.gimp_item_transform_rotate(part_copy, math.radians(iso["angle"]),
+                                           False, part_data['center_x'], part_data['center_y'])
+            
+            # Aplicar movimiento específico
+            if part_name == "head":
+                pdb.gimp_layer_translate(part_copy, 0, -bob_y)
+            elif part_name == "leg_right":
+                offset_x = leg_phase * 3 * iso["dirX"]
+                offset_y = leg_phase * 1.5 * iso["dirY"]
+                pdb.gimp_layer_translate(part_copy, offset_x, offset_y)
+            elif part_name == "leg_left":
+                offset_x = -leg_phase * 3 * iso["dirX"]
+                offset_y = -leg_phase * 1.5 * iso["dirY"]
+                pdb.gimp_layer_translate(part_copy, offset_x, offset_y)
+            elif part_name == "arm_right":
+                offset_x = arm_phase * 2 * iso["dirX"]
+                offset_y = arm_phase * 1 * iso["dirY"]
+                pdb.gimp_layer_translate(part_copy, offset_x, offset_y)
+            elif part_name == "arm_left":
+                offset_x = -arm_phase * 2 * iso["dirX"]
+                offset_y = -arm_phase * 1 * iso["dirY"]
+                pdb.gimp_layer_translate(part_copy, offset_x, offset_y)
+
+def create_run_iso(image, parts, direction):
+    group = pdb.gimp_layer_group_new(image)
+    group.name = "RUN_" + direction
+    pdb.gimp_image_insert_layer(image, group, None, 0)
+    
+    iso = get_iso_transform(direction)
+    
+    for frame in range(RUN_FRAMES):
+        frame_group = pdb.gimp_layer_group_new(image)
+        frame_group.name = "run_{}_{:02d}".format(direction, frame)
+        pdb.gimp_image_insert_layer(image, frame_group, group, 0)
+        
+        t = float(frame) / RUN_FRAMES
+        
+        bob_y = abs(math.sin(t * math.pi * 2)) * 4
+        leg_phase = math.sin(t * math.pi * 2)
+        
+        lean_x = 2 * iso["dirX"]
+        lean_y = 1 * iso["dirY"]
+        
+        for part_name, part_data in parts.items():
+            part_copy = pdb.gimp_layer_copy(part_data['layer'], True)
+            pdb.gimp_image_insert_layer(image, part_copy, frame_group, 0)
+            
+            pdb.gimp_item_transform_rotate(part_copy, math.radians(iso["angle"]),
+                                           False, part_data['center_x'], part_data['center_y'])
+            
+            if part_name == "torso":
+                pdb.gimp_layer_translate(part_copy, lean_x, lean_y)
+            elif part_name == "head":
+                pdb.gimp_layer_translate(part_copy, lean_x, -bob_y + lean_y)
+            elif part_name in ["leg_right", "leg_left"]:
+                swing = 6 if part_name == "leg_right" else -6
+                offset_x = leg_phase * swing * iso["dirX"]
+                offset_y = leg_phase * swing * 0.5 * iso["dirY"]
+                pdb.gimp_layer_translate(part_copy, offset_x, offset_y)
+
+def create_jump_iso(image, parts):
+    group = pdb.gimp_layer_group_new(image)
+    group.name = "JUMP_ISO"
+    pdb.gimp_image_insert_layer(image, group, None, 0)
+    
+    for frame in range(JUMP_FRAMES):
+        frame_group = pdb.gimp_layer_group_new(image)
+        frame_group.name = "jump_{:02d}".format(frame)
+        pdb.gimp_image_insert_layer(image, frame_group, group, 0)
+        
+        t = float(frame) / JUMP_FRAMES
+        jump_height = math.sin(t * math.pi) * -30
+        
+        for part_name, part_data in parts.items():
+            part_copy = pdb.gimp_layer_copy(part_data['layer'], True)
+            pdb.gimp_image_insert_layer(image, part_copy, frame_group, 0)
+            
+            if part_name == "head":
+                pdb.gimp_layer_translate(part_copy, 0, jump_height - 5)
+            else:
+                pdb.gimp_layer_translate(part_copy, 0, jump_height)
+
+def character_animator_isometric(image, drawable):
+    pdb.gimp_image_undo_group_start(image)
+    
+    try:
+        parts = segment_isometric(image)
+        
+        if len(parts) == 0:
+            pdb.gimp_message("No se segmentaron partes")
+            return
+        
+        drawable.visible = False
+        
+        for direction in DIRECTIONS_8:
+            create_walk_iso(image, parts, direction)
+            create_run_iso(image, parts, direction)
+        
+        create_jump_iso(image, parts)
+        
+        pdb.gimp_displays_flush()
+        pdb.gimp_message("¡Completado!\n\n17 grupos: WALK/RUN (8 dir) + JUMP")
+        
+    except Exception as e:
+        pdb.gimp_message("Error: " + str(e))
+    
+    finally:
+        pdb.gimp_image_undo_group_end(image)
+
+register(
+    "python_fu_character_animator_isometric",
+    "Genera animaciones isométricas en 8 direcciones",
+    "Walk, Run (8 dir) + Jump",
+    "Tu Nombre",
+    "Tu Nombre",
+    "2025",
+    "<Image>/Filters/Animation/Character Animator (Isometric)",
+    "RGB*, GRAY*",
+    [],
+    [],
+    character_animator_isometric
+)
+
+main()
+</pre>
+                    </div>
+
+                    <div id="subview-auto-synfig" class="auto-sub-view hidden">
+                        <h3 class="text-2xl font-bold text-brand-accent mb-4">Synfig Studio (Python)</h3>
+                        <p class="text-lg mb-4">Synfig Studio también se puede controlar con Python. Los scripts pueden crear capas, huesos (skeletons) y animar sus parámetros automáticamente con keyframes. Estos scripts se ejecutan desde <code>Plugins > Run Python Script</code>.</p>
+                        
+                        <p class="text-base font-semibold mb-2">Ejemplo 1: Character Animator - Vista Lateral</p>
+                        <pre class="code-block">
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+SYNFIG CHARACTER ANIMATOR - VISTA LATERAL
+Genera animaciones con sistema de huesos (skeleton/rigging)
+Animaciones: walk, run, jump, crouch
+
+INSTALACIÓN:
+Guarda este script en: ~/.synfig/plugins/
+O usa: Plugins > Run Python Script
+
+NOTA: Este script requiere Synfig Studio 1.4+
+"""
+
+import math
+
+# Configuración de frames
+WALK_FRAMES = 8
+RUN_FRAMES = 6
+JUMP_FRAMES = 10
+CROUCH_FRAMES = 4
+FPS = 12
+
+def create_bone_layer(canvas, name, parent=None):
+    """
+    Crea un bone layer en Synfig
+    """
+    bone = canvas.new_layer('skeleton_bone', name)
+    if parent:
+        bone.set_param('parent', parent)
+    return bone
+
+def create_character_skeleton(canvas):
+    """
+    Crea esqueleto completo del personaje
+    """
+    skeleton = {}
+    
+    # Bone raíz (cadera)
+    skeleton['root'] = create_bone_layer(canvas, 'root')
+    skeleton['root'].set_param('origin', [0, 0])
+    
+    # Torso
+    skeleton['spine'] = create_bone_layer(canvas, 'spine', skeleton['root'])
+    skeleton['spine'].set_param('origin', [0, -50])
+    
+    # Cuello y cabeza
+    skeleton['neck'] = create_bone_layer(canvas, 'neck', skeleton['spine'])
+    skeleton['neck'].set_param('origin', [0, -30])
+    
+    skeleton['head'] = create_bone_layer(canvas, 'head', skeleton['neck'])
+    skeleton['head'].set_param('origin', [0, -20])
+    
+    # Brazo derecho
+    skeleton['shoulder_r'] = create_bone_layer(canvas, 'shoulder_r', skeleton['spine'])
+    skeleton['shoulder_r'].set_param('origin', [15, -25])
+    
+    skeleton['arm_r'] = create_bone_layer(canvas, 'arm_r', skeleton['shoulder_r'])
+    skeleton['arm_r'].set_param('origin', [0, 25])
+    
+    skeleton['forearm_r'] = create_bone_layer(canvas, 'forearm_r', skeleton['arm_r'])
+    skeleton['forearm_r'].set_param('origin', [0, 20])
+    
+    # Brazo izquierdo
+    skeleton['shoulder_l'] = create_bone_layer(canvas, 'shoulder_l', skeleton['spine'])
+    skeleton['shoulder_l'].set_param('origin', [-15, -25])
+    
+    skeleton['arm_l'] = create_bone_layer(canvas, 'arm_l', skeleton['shoulder_l'])
+    skeleton['arm_l'].set_param('origin', [0, 25])
+    
+    skeleton['forearm_l'] = create_bone_layer(canvas, 'forearm_l', skeleton['arm_l'])
+    skeleton['forearm_l'].set_param('origin', [0, 20])
+    
+    # Pierna derecha
+    skeleton['hip_r'] = create_bone_layer(canvas, 'hip_r', skeleton['root'])
+    skeleton['hip_r'].set_param('origin', [8, 0])
+    
+    skeleton['thigh_r'] = create_bone_layer(canvas, 'thigh_r', skeleton['hip_r'])
+    skeleton['thigh_r'].set_param('origin', [0, 35])
+    
+    skeleton['shin_r'] = create_bone_layer(canvas, 'shin_r', skeleton['thigh_r'])
+    skeleton['shin_r'].set_param('origin', [0, 30])
+    
+    skeleton['foot_r'] = create_bone_layer(canvas, 'foot_r', skeleton['shin_r'])
+    skeleton['foot_r'].set_param('origin', [0, 8])
+    
+    # Pierna izquierda
+    skeleton['hip_l'] = create_bone_layer(canvas, 'hip_l', skeleton['root'])
+    skeleton['hip_l'].set_param('origin', [-8, 0])
+    
+    skeleton['thigh_l'] = create_bone_layer(canvas, 'thigh_l', skeleton['hip_l'])
+    skeleton['thigh_l'].set_param('origin', [0, 35])
+    
+    skeleton['shin_l'] = create_bone_layer(canvas, 'shin_l', skeleton['thigh_l'])
+    skeleton['shin_l'].set_param('origin', [0, 30])
+    
+    skeleton['foot_l'] = create_bone_layer(canvas, 'foot_l', skeleton['shin_l'])
+    skeleton['foot_l'].set_param('origin', [0, 8])
+    
+    return skeleton
+
+def animate_walk_cycle(canvas, skeleton, start_frame):
+    """
+    Genera ciclo de caminata con keyframes
+    """
+    for frame in range(WALK_FRAMES):
+        time = (start_frame + frame) / FPS
+        t = frame / WALK_FRAMES
+        
+        # Oscilación del cuerpo
+        body_y = math.sin(t * math.pi * 4) * 2
+        skeleton['root'].set_param('origin', [0, body_y], time)
+        
+        # Rotación de piernas (fase opuesta)
+        leg_angle_r = math.sin(t * math.pi * 2) * 30
+        leg_angle_l = math.sin((t + 0.5) * math.pi * 2) * 30
+        
+        skeleton['thigh_r'].set_param('angle', leg_angle_r, time)
+        skeleton['thigh_l'].set_param('angle', leg_angle_l, time)
+        
+        # Extensión de rodillas
+        knee_angle_r = max(0, -leg_angle_r)
+        knee_angle_l = max(0, -leg_angle_l)
+        
+        skeleton['shin_r'].set_param('angle', knee_angle_r, time)
+        skeleton['shin_l'].set_param('angle', knee_angle_l, time)
+        
+        # Brazos en fase opuesta a piernas
+        arm_angle_r = math.sin((t + 0.5) * math.pi * 2) * 25
+        arm_angle_l = math.sin(t * math.pi * 2) * 25
+        
+        skeleton['arm_r'].set_param('angle', arm_angle_r, time)
+        skeleton['arm_l'].set_param('angle', arm_angle_l, time)
+        
+        # Ligero movimiento de cabeza
+        head_tilt = math.sin(t * math.pi * 4) * 3
+        skeleton['head'].set_param('angle', head_tilt, time)
+
+def animate_run_cycle(canvas, skeleton, start_frame):
+    """
+    Genera ciclo de carrera
+    """
+    for frame in range(RUN_FRAMES):
+        time = (start_frame + frame) / FPS
+        t = frame / RUN_FRAMES
+        
+        # Inclinación hacia adelante
+        skeleton['spine'].set_param('angle', 15, time)
+        
+        # Piernas con mayor amplitud
+        leg_angle_r = math.sin(t * math.pi * 2) * 45
+        leg_angle_l = math.sin((t + 0.5) * math.pi * 2) * 45
+        
+        skeleton['thigh_r'].set_param('angle', leg_angle_r, time)
+        skeleton['thigh_l'].set_param('angle', leg_angle_l, time)
+        
+        # Rodillas más flexionadas
+        knee_angle_r = max(0, -leg_angle_r * 1.2)
+        knee_angle_l = max(0, -leg_angle_l * 1.2)
+        
+        skeleton['shin_r'].set_param('angle', knee_angle_r, time)
+        skeleton['shin_l'].set_param('angle', knee_angle_l, time)
+        
+        # Brazos con mayor amplitud
+        arm_angle_r = math.sin((t + 0.5) * math.pi * 2) * 40
+        arm_angle_l = math.sin(t * math.pi * 2) * 40
+        
+        skeleton['arm_r'].set_param('angle', arm_angle_r, time)
+        skeleton['arm_l'].set_param('angle', arm_angle_l, time)
+
+def animate_jump_cycle(canvas, skeleton, start_frame):
+    """
+    Genera ciclo de salto
+    """
+    for frame in range(JUMP_FRAMES):
+        time = (start_frame + frame) / FPS
+        t = frame / JUMP_FRAMES
+        
+        # Parábola de salto
+        jump_height = math.sin(t * math.pi) * -50
+        skeleton['root'].set_param('origin', [0, jump_height], time)
+        
+        # Fase del salto
+        if t < 0.3:
+            # Preparación: agachado
+            skeleton['thigh_r'].set_param('angle', -45, time)
+            skeleton['thigh_l'].set_param('angle', -45, time)
+            skeleton['shin_r'].set_param('angle', 90, time)
+            skeleton['shin_l'].set_param('angle', 90, time)
+        elif t < 0.7:
+            # Vuelo: extendido
+            skeleton['thigh_r'].set_param('angle', 20, time)
+            skeleton['thigh_l'].set_param('angle', 20, time)
+            skeleton['shin_r'].set_param('angle', -10, time)
+            skeleton['shin_l'].set_param('angle', -10, time)
+        else:
+            # Aterrizaje: recogido
+            skeleton['thigh_r'].set_param('angle', -30, time)
+            skeleton['thigh_l'].set_param('angle', -30, time)
+            skeleton['shin_r'].set_param('angle', 60, time)
+            skeleton['shin_l'].set_param('angle', 60, time)
+        
+        # Brazos hacia arriba
+        arm_angle = -80 if t < 0.5 else -40
+        skeleton['arm_r'].set_param('angle', arm_angle, time)
+        skeleton['arm_l'].set_param('angle', arm_angle, time)
+
+def animate_crouch_cycle(canvas, skeleton, start_frame):
+    """
+    Genera ciclo de agacharse
+    """
+    for frame in range(CROUCH_FRAMES):
+        time = (start_frame + frame) / FPS
+        t = frame / (CROUCH_FRAMES - 1)
+        
+        # Descenso del cuerpo
+        crouch_y = t * 30
+        skeleton['root'].set_param('origin', [0, crouch_y], time)
+        
+        # Flexión de piernas
+        leg_bend = t * -60
+        skeleton['thigh_r'].set_param('angle', leg_bend, time)
+        skeleton['thigh_l'].set_param('angle', leg_bend, time)
+        
+        knee_bend = t * 120
+        skeleton['shin_r'].set_param('angle', knee_bend, time)
+        skeleton['shin_l'].set_param('angle', knee_bend, time)
+        
+        # Inclinación del torso
+        skeleton['spine'].set_param('angle', t * 20, time)
+        
+        # Brazos hacia adelante
+        skeleton['arm_r'].set_param('angle', 45, time)
+        skeleton['arm_l'].set_param('angle', 45, time)
+
+def main():
+    """
+    Función principal del script
+    """
+    # Obtener canvas activo
+    canvas = synfig.get_active_canvas()
+    
+    if not canvas:
+        print("Error: No hay canvas activo")
+        return
+    
+    # Crear esqueleto
+    skeleton = create_character_skeleton(canvas)
+    
+    # Generar animaciones
+    animate_walk_cycle(canvas, skeleton, 0)
+    animate_run_cycle(canvas, skeleton, WALK_FRAMES)
+    animate_jump_cycle(canvas, skeleton, WALK_FRAMES + RUN_FRAMES)
+    animate_crouch_cycle(canvas, skeleton, WALK_FRAMES + RUN_FRAMES + JUMP_FRAMES)
+    
+    # Configurar duración total
+    total_frames = WALK_FRAMES + RUN_FRAMES + JUMP_FRAMES + CROUCH_FRAMES
+    canvas.set_param('end_time', total_frames / FPS)
+    
+    print("¡Animación completada!")
+    print(f"Frames totales: {total_frames}")
+    print("Animaciones: Walk, Run, Jump, Crouch")
+
+# Ejecutar si se corre como script
+if __name__ == "__main__":
+    main()
+</pre>
+                        
+                        <hr class="my-6 border-brand-primary/20">
+                        <p class="text-base font-semibold mb-2">Ejemplo 2: Character Animator - Vista Top-Down</p>
+                        <pre class="code-block">
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+SYNFIG CHARACTER ANIMATOR - VISTA TOP-DOWN
+Genera animaciones en 4 direcciones con rigging
+Direcciones: N, S, E, W
+
+INSTALACIÓN: ~/.synfig/plugins/
+Synfig Studio 1.4+
+"""
+
+import math
+
+WALK_FRAMES = 4
+RUN_FRAMES = 4
+FPS = 8
+DIRECTIONS = ["north", "south", "east", "west"]
+
+def create_topdown_skeleton(canvas):
+    """
+    Crea esqueleto para vista cenital
+    """
+    skeleton = {}
+    
+    # Centro del personaje
+    skeleton['center'] = canvas.new_layer('skeleton_bone', 'center')
+    skeleton['center'].set_param('origin', [0, 0])
+    
+    # Cabeza
+    skeleton['head'] = canvas.new_layer('skeleton_bone', 'head')
+    skeleton['head'].set_param('parent', skeleton['center'])
+    skeleton['head'].set_param('origin', [0, -15])
+    
+    # Cuerpo
+    skeleton['body'] = canvas.new_layer('skeleton_bone', 'body')
+    skeleton['body'].set_param('parent', skeleton['center'])
+    skeleton['body'].set_param('origin', [0, 0])
+    
+    # Brazos
+    skeleton['arm_r'] = canvas.new_layer('skeleton_bone', 'arm_r')
+    skeleton['arm_r'].set_param('parent', skeleton['body'])
+    skeleton['arm_r'].set_param('origin', [10, 0])
+    
+    skeleton['arm_l'] = canvas.new_layer('skeleton_bone', 'arm_l')
+    skeleton['arm_l'].set_param('parent', skeleton['body'])
+    skeleton['arm_l'].set_param('origin', [-10, 0])
+    
+    # Piernas
+    skeleton['leg_r'] = canvas.new_layer('skeleton_bone', 'leg_r')
+    skeleton['leg_r'].set_param('parent', skeleton['body'])
+    skeleton['leg_r'].set_param('origin', [5, 10])
+    
+    skeleton['leg_l'] = canvas.new_layer('skeleton_bone', 'leg_l')
+    skeleton['leg_l'].set_param('parent', skeleton['body'])
+    skeleton['leg_l'].set_param('origin', [-5, 10])
+    
+    return skeleton
+
+def get_direction_rotation(direction):
+    """
+    Retorna ángulo de rotación para cada dirección
+    """
+    rotations = {
+        "north": 0,
+        "south": 180,
+        "east": 270,
+        "west": 90
+    }
+    return rotations.get(direction, 0)
+
+def animate_walk_direction(canvas, skeleton, direction, start_frame):
+    """
+    Anima caminata en una dirección
+    """
+    rotation = get_direction_rotation(direction)
+    
+    for frame in range(WALK_FRAMES):
+        time = (start_frame + frame) / FPS
+        t = frame / WALK_FRAMES
+        
+        # Rotar todo el personaje hacia la dirección
+        skeleton['center'].set_param('angle', rotation, time)
+        
+        # Oscilación de cabeza
+        head_bob_y = math.sin(t * math.pi * 2) * 1
+        skeleton['head'].set_param('origin', [0, -15 + head_bob_y], time)
+        
+        # Movimiento de brazos (oscilación lateral en vista top-down)
+        arm_swing = math.sin(t * math.pi * 2) * 3
+        skeleton['arm_r'].set_param('origin', [10 + arm_swing, 0], time)
+        skeleton['arm_l'].set_param('origin', [-10 - arm_swing, 0], time)
+        
+        # Movimiento de piernas
+        leg_swing = math.sin(t * math.pi * 2) * 5
+        skeleton['leg_r'].set_param('origin', [5 + leg_swing, 10], time)
+        skeleton['leg_l'].set_param('origin', [-5 - leg_swing, 10], time)
+
+def animate_run_direction(canvas, skeleton, direction, start_frame):
+    """
+    Anima carrera en una dirección
+    """
+    rotation = get_direction_rotation(direction)
+    
+    for frame in range(RUN_FRAMES):
+        time = (start_frame + frame) / FPS
+        t = frame / RUN_FRAMES
+        
+        # Rotar personaje
+        skeleton['center'].set_param('angle', rotation, time)
+        
+        # Mayor oscilación
+        head_bob_y = math.sin(t * math.pi * 2) * 2
+        skeleton['head'].set_param('origin', [0, -15 + head_bob_y], time)
+        
+        # Brazos con mayor amplitud
+        arm_swing = math.sin(t * math.pi * 2) * 6
+        skeleton['arm_r'].set_param('origin', [10 + arm_swing, 0], time)
+        skeleton['arm_l'].set_param('origin', [-10 - arm_swing, 0], time)
+        
+        # Piernas con mayor amplitud
+        leg_swing = math.sin(t * math.pi * 2) * 8
+        skeleton['leg_r'].set_param('origin', [5 + leg_swing, 10], time)
+        skeleton['leg_l'].set_param('origin', [-5 - leg_swing, 10], time)
+        
+        # Inclinación del cuerpo
+        body_lean = math.sin(t * math.pi * 2) * 2
+        skeleton['body'].set_param('origin', [body_lean, 0], time)
+
+def main():
+    """
+    Función principal
+    """
+    canvas = synfig.get_active_canvas()
+    
+    if not canvas:
+        print("Error: No hay canvas activo")
+        return
+    
+    skeleton = create_topdown_skeleton(canvas)
+    
+    current_frame = 0
+    
+    # Generar animaciones para cada dirección
+    for direction in DIRECTIONS:
+        animate_walk_direction(canvas, skeleton, direction, current_frame)
+        current_frame += WALK_FRAMES
+        
+        animate_run_direction(canvas, skeleton, direction, current_frame)
+        current_frame += RUN_FRAMES
+    
+    # Configurar duración
+    total_frames = len(DIRECTIONS) * (WALK_FRAMES + RUN_FRAMES)
+    canvas.set_param('end_time', total_frames / FPS)
+    
+    print("¡Animación top-down completada!")
+    print(f"Direcciones: {', '.join(DIRECTIONS)}")
+    print(f"Frames totales: {total_frames}")
+
+if __name__ == "__main__":
+    main()
+</pre>
+                        
+                        <hr class="my-6 border-brand-primary/20">
+                        <p class="text-base font-semibold mb-2">Ejemplo 3: Character Animator - Vista Isométrica</p>
+                        <pre class="code-block">
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+SYNFIG CHARACTER ANIMATOR - VISTA ISOMÉTRICA
+Genera animaciones en 8 direcciones con perspectiva isométrica
+Direcciones: N, NE, E, SE, S, SW, W, NW
+
+INSTALACIÓN: ~/.synfig/plugins/
+Synfig Studio 1.4+
+"""
+
+import math
+
+WALK_FRAMES = 8
+RUN_FRAMES = 6
+JUMP_FRAMES = 12
+FPS = 8
+DIRECTIONS_8 = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+ISO_SCALE_Y = 0.5  # Compresión isométrica 2:1
+
+def create_isometric_skeleton(canvas):
+    """
+    Crea esqueleto para vista isométrica
+    """
+    skeleton = {}
+    
+    # Raíz
+    skeleton['root'] = canvas.new_layer('skeleton_bone', 'root')
+    skeleton['root'].set_param('origin', [0, 0])
+    
+    # Torso
+    skeleton['torso'] = canvas.new_layer('skeleton_bone', 'torso')
+    skeleton['torso'].set_param('parent', skeleton['root'])
+    skeleton['torso'].set_param('origin', [0, -30])
+    
+    # Cabeza
+    skeleton['head'] = canvas.new_layer('skeleton_bone', 'head')
+    skeleton['head'].set_param('parent', skeleton['torso'])
+    skeleton['head'].set_param('origin', [0, -20])
+    
+    # Brazos
+    skeleton['shoulder_r'] = canvas.new_layer('skeleton_bone', 'shoulder_r')
+    skeleton['shoulder_r'].set_param('parent', skeleton['torso'])
+    skeleton['shoulder_r'].set_param('origin', [12, -5])
+    
+    skeleton['arm_r'] = canvas.new_layer('skeleton_bone', 'arm_r')
+    skeleton['arm_r'].set_param('parent', skeleton['shoulder_r'])
+    skeleton['arm_r'].set_param('origin', [0, 15])
+    
+    skeleton['shoulder_l'] = canvas.new_layer('skeleton_bone', 'shoulder_l')
+    skeleton['shoulder_l'].set_param('parent', skeleton['torso'])
+    skeleton['shoulder_l'].set_param('origin', [-12, -5])
+    
+    skeleton['arm_l'] = canvas.new_layer('skeleton_bone', 'arm_l')
+    skeleton['arm_l'].set_param('parent', skeleton['shoulder_l'])
+    skeleton['arm_l'].set_param('origin', [0, 15])
+    
+    # Piernas
+    skeleton['hip_r'] = canvas.new_layer('skeleton_bone', 'hip_r')
+    skeleton['hip_r'].set_param('parent', skeleton['root'])
+    skeleton['hip_r'].set_param('origin', [6, 0])
+    
+    skeleton['thigh_r'] = canvas.new_layer('skeleton_bone', 'thigh_r')
+    skeleton['thigh_r'].set_param('parent', skeleton['hip_r'])
+    skeleton['thigh_r'].set_param('origin', [0, 20])
+    
+    skeleton['hip_l'] = canvas.new_layer('skeleton_bone', 'hip_l')
+    skeleton['hip_l'].set_param('parent', skeleton['root'])
+    skeleton['hip_l'].set_param('origin', [-6, 0])
+    
+    skeleton['thigh_l'] = canvas.new_layer('skeleton_bone', 'thigh_l')
+    skeleton['thigh_l'].set_param('parent', skeleton['hip_l'])
+    skeleton['thigh_l'].set_param('origin', [0, 20])
+    
+    return skeleton
+
+def get_iso_transform(direction):
+    """
+    Retorna transformación isométrica para dirección
+    """
+    transforms = {
+        "N":  {"angle": 0,   "dirX": 0,  "dirY": -1},
+        "NE": {"angle": 45,  "dirX": 1,  "dirY": -1},
+        "E":  {"angle": 90,  "dirX": 1,  "dirY": 0},
+        "SE": {"angle": 135, "dirX": 1,  "dirY": 1},
+        "S":  {"angle": 180, "dirX": 0,  "dirY": 1},
+        "SW": {"angle": 225, "dirX": -1, "dirY": 1},
+        "W":  {"angle": 270, "dirX": -1, "dirY": 0},
+        "NW": {"angle": 315, "dirX": -1, "dirY": -1}
+    }
+    return transforms.get(direction, transforms["SE"])
+
+def animate_walk_iso(canvas, skeleton, direction, start_frame):
+    """
+    Anima caminata isométrica en una dirección
+    """
+    iso = get_iso_transform(direction)
+    
+    for frame in range(WALK_FRAMES):
+        time = (start_frame + frame) / FPS
+        t = frame / WALK_FRAMES
+        
+        # Rotar personaje hacia dirección
+        skeleton['root'].set_param('angle', iso["angle"], time)
+        
+        # Oscilación vertical (bob)
+        bob_y = abs(math.sin(t * math.pi * 2)) * 2
+        skeleton['root'].set_param('origin', [0, bob_y], time)
+        
+        # Movimiento de piernas con perspectiva isométrica
+        leg_phase = math.sin(t * math.pi * 2)
+        
+        # Desplazamiento en plano isométrico
+        offset_x_r = leg_phase * 3 * iso["dirX"]
+        offset_y_r = leg_phase * 1.5 * iso["dirY"] * ISO_SCALE_Y
+        
+        offset_x_l = -leg_phase * 3 * iso["dirX"]
+        offset_y_l = -leg_phase * 1.5 * iso["dirY"] * ISO_SCALE_Y
+        
+        skeleton['thigh_r'].set_param('origin', [offset_x_r, 20 + offset_y_r], time)
+        skeleton['thigh_l'].set_param('origin', [offset_x_l, 20 + offset_y_l], time)
+        
+        # Movimiento de brazos (fase opuesta)
+        arm_phase = math.sin((t + 0.5) * math.pi * 2)
+        
+        arm_offset_x_r = arm_phase * 2 * iso["dirX"]
+        arm_offset_y_r = arm_phase * 1 * iso["dirY"] * ISO_SCALE_Y
+        
+        arm_offset_x_l = -arm_phase * 2 * iso["dirX"]
+        arm_offset_y_l = -arm_phase * 1 * iso["dirY"] * ISO_SCALE_Y
+        
+        skeleton['arm_r'].set_param('origin', [arm_offset_x_r, 15 + arm_offset_y_r], time)
+        skeleton['arm_l'].set_param('origin', [arm_offset_x_l, 15 + arm_offset_y_l], time)
+        
+        # Z-order dinámico (simular profundidad)
+        # La pierna que va hacia atrás debe estar detrás
+        if leg_phase > 0:
+            skeleton['thigh_r'].set_param('z_depth', -1, time)
+            skeleton['thigh_l'].set_param('z_depth', 1, time)
+        else:
+            skeleton['thigh_r'].set_param('z_depth', 1, time)
+            skeleton['thigh_l'].set_param('z_depth', -1, time)
+
+def animate_run_iso(canvas, skeleton, direction, start_frame):
+    """
+    Anima carrera isométrica
+    """
+    iso = get_iso_transform(direction)
+    
+    for frame in range(RUN_FRAMES):
+        time = (start_frame + frame) / FPS
+        t = frame / RUN_FRAMES
+        
+        skeleton['root'].set_param('angle', iso["angle"], time)
+        
+        # Mayor oscilación
+        bob_y = abs(math.sin(t * math.pi * 2)) * 4
+        skeleton['root'].set_param('origin', [0, bob_y], time)
+        
+        # Inclinación hacia adelante
+        lean_x = 2 * iso["dirX"]
+        lean_y = 1 * iso["dirY"] * ISO_SCALE_Y
+        skeleton['torso'].set_param('origin', [lean_x, -30 + lean_y], time)
+        
+        # Piernas con mayor amplitud
+        leg_phase = math.sin(t * math.pi * 2)
+        leg_swing = 6
+        
+        offset_x_r = leg_phase * leg_swing * iso["dirX"]
+        offset_y_r = leg_phase * leg_swing * 0.5 * iso["dirY"] * ISO_SCALE_Y
+        
+        offset_x_l = -leg_phase * leg_swing * iso["dirX"]
+        offset_y_l = -leg_phase * leg_swing * 0.5 * iso["dirY"] * ISO_SCALE_Y
+        
+        skeleton['thigh_r'].set_param('origin', [offset_x_r, 20 + offset_y_r], time)
+        skeleton['thigh_l'].set_param('origin', [offset_x_l, 20 + offset_y_l], time)
+        
+        # Brazos con mayor amplitud
+        arm_phase = math.sin((t + 0.5) * math.pi * 2)
+        arm_swing = 4
+        
+        arm_offset_x_r = arm_phase * arm_swing * iso["dirX"]
+        arm_offset_y_r = arm_phase * arm_swing * 0.5 * iso["dirY"] * ISO_SCALE_Y
+        
+        arm_offset_x_l = -arm_phase * arm_swing * iso["dirX"]
+        arm_offset_y_l = -arm_phase * arm_swing * 0.5 * iso["dirY"] * ISO_SCALE_Y
+        
+        skeleton['arm_r'].set_param('origin', [arm_offset_x_r, 15 + arm_offset_y_r], time)
+        skeleton['arm_l'].set_param('origin', [arm_offset_x_l, 15 + arm_offset_y_l], time)
+
+def animate_jump_iso(canvas, skeleton, start_frame):
+    """
+    Anima salto isométrico
+    """
+    for frame in range(JUMP_FRAMES):
+        time = (start_frame + frame) / FPS
+        t = frame / JUMP_FRAMES
+        
+        # Parábola de salto
+        jump_height = math.sin(t * math.pi) * -30
+        skeleton['root'].set_param('origin', [0, jump_height], time)
+        
+        # Compresión/extensión de piernas
+        leg_extend = t < 0.5 ? t * 2 : (1 - t) * 2
+        
+        skeleton['thigh_r'].set_param('origin', [leg_extend * 3, 20 + leg_extend * 5], time)
+        skeleton['thigh_l'].set_param('origin', [-leg_extend * 3, 20 + leg_extend * 5], time)
+        
+        # Brazos hacia arriba durante el salto
+        arm_lift = -20 if t < 0.5 else 0
+        skeleton['arm_r'].set_param('origin', [0, 15 + arm_lift], time)
+        skeleton['arm_l'].set_param('origin', [0, 15 + arm_lift], time)
+
+def main():
+    """
+    Función principal
+    """
+    canvas = synfig.get_active_canvas()
+    
+    if not canvas:
+        print("Error: No hay canvas activo")
+        return
+    
+    skeleton = create_isometric_skeleton(canvas)
+    
+    current_frame = 0
+    
+    # Generar animaciones para 8 direcciones
+    for direction in DIRECTIONS_8:
+        animate_walk_iso(canvas, skeleton, direction, current_frame)
+        current_frame += WALK_FRAMES
+        
+        animate_run_iso(canvas, skeleton, direction, current_frame)
+        current_frame += RUN_FRAMES
+    
+    # Agregar salto
+    animate_jump_iso(canvas, skeleton, current_frame)
+    current_frame += JUMP_FRAMES
+    
+    # Configurar duración
+    canvas.set_param('end_time', current_frame / FPS)
+    
+    print("¡Animación isométrica completada!")
+    print(f"8 direcciones + salto")
+    print(f"Frames totales: {current_frame}")
+
+if __name__ == "__main__":
+    main()
+</pre>
+                    </div>
+
+                    <div id="subview-auto-affinity" class="auto-sub-view hidden">
+                        <h3 class="text-2xl font-bold text-brand-accent mb-4">Affinity (Macros)</h3>
+                        <p class="text-lg mb-4">Affinity no usa scripts de texto como Adobe o GIMP. En su lugar, utiliza <strong>Macros</strong>, que son acciones grabadas (similar a las "Acciones" de Photoshop, pero más potentes).</p>
+                        <p class="text-base font-semibold mb-2">Flujo de trabajo para crear una Macro:</p>
+                        <ol class="list-decimal list-inside space-y-2">
+                            <li>Ve al panel <code>Biblioteca</code>.</li>
+                            <li>Haz clic en "Añadir Macro" (icono de punto rojo) para empezar a grabar.</li>
+                            <li>Realiza tus acciones (ej. "Añadir capa de ajuste de Curvas", "Subir los medios tonos", "Añadir filtro de Enfoque").</li>
+                            <li>Haz clic en "Detener" (icono cuadrado).</li>
+                            <li>Guarda la Macro en tu Biblioteca.</li>
+                        </ol>
+                        <p class="text-lg mt-4">Ahora puedes ejecutar esa secuencia exacta de acciones en cualquier documento con un solo clic. Es una automatización visual, no basada en código.</p>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div id="modal-overlay" class="fixed inset-0 bg-black/70"></div>
+        <div class="bg-brand-card w-full max-w-2xl rounded-lg shadow-2xl z-10 p-6 md:p-8 relative max-h-[80vh] overflow-y-auto">
+            <button id="modal-close" class="absolute top-4 right-4 text-brand-text/50 hover:text-brand-accent text-3xl font-bold">&times;</button>
+            <h2 id="modal-title" class="text-3xl font-bold text-brand-primary mb-6"></h2>
+            <div id="modal-content" class="text-lg space-y-4"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainNav = document.getElementById('main-nav');
+            const contentContainer = document.getElementById('content-container');
+            const views = contentContainer.querySelectorAll('.content-view');
+            const headerHome = document.getElementById('header-home');
+            
+            const platformNav = document.getElementById('platform-nav');
+            const platformViews = document.getElementById('view-plataformas').querySelectorAll('.sub-view');
+            
+            const opensourceNav = document.getElementById('opensource-nav');
+            const opensourceViews = document.getElementById('subview-abierto').querySelectorAll('.os-sub-view');
+            
+            const autoNav = document.getElementById('auto-nav');
+            const autoViews = document.getElementById('view-automatizacion').querySelectorAll('.auto-sub-view');
+            
+            const modal = document.getElementById('modal');
+            const modalOverlay = document.getElementById('modal-overlay');
+            const modalClose = document.getElementById('modal-close');
+            const modalTitle = document.getElementById('modal-title');
+            const modalContent = document.getElementById('modal-content');
+            
+            const fundamentoBtns = document.querySelectorAll('.fundamento-btn');
+
+            function showView(viewId) {
+                views.forEach(view => {
+                    view.classList.add('hidden');
+                });
+                const targetView = document.getElementById(`view-${viewId}`);
+                if (targetView) {
+                    targetView.classList.remove('hidden');
+                }
+
+                mainNav.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active', 'bg-brand-secondary', 'text-white');
+                    link.classList.add('bg-brand-card', 'text-brand-secondary', 'hover:bg-brand-secondary/10', 'shadow-sm', 'border', 'border-brand-secondary/20');
+                });
+                const activeLink = mainNav.querySelector(`[data-view="${viewId}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active', 'bg-brand-secondary', 'text-white');
+                    activeLink.classList.remove('bg-brand-card', 'text-brand-secondary', 'hover:bg-brand-secondary/10', 'shadow-sm', 'border', 'border-brand-secondary/20');
+                }
+            }
+
+            function showSubView(subViewId) {
+                platformViews.forEach(view => {
+                    view.classList.add('hidden');
+                });
+                const targetView = document.getElementById(`subview-${subViewId}`);
+                if (targetView) {
+                    targetView.classList.remove('hidden');
+                }
+
+                platformNav.querySelectorAll('.subnav-link').forEach(link => {
+                    link.classList.remove('active', 'bg-brand-accent', 'text-white', 'shadow-md');
+                    link.classList.add('bg-brand-card', 'text-brand-accent', 'hover:bg-brand-accent/10', 'shadow-sm', 'border', 'border-brand-accent/30');
+                });
+                const activeLink = platformNav.querySelector(`[data-subview="${subViewId}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active', 'bg-brand-accent', 'text-white', 'shadow-md');
+                    activeLink.classList.remove('bg-brand-card', 'text-brand-accent', 'hover:bg-brand-accent/10', 'shadow-sm', 'border', 'border-brand-accent/30');
+                }
+            }
+            
+            function showOpenSourceView(subViewId) {
+                opensourceViews.forEach(view => {
+                    view.classList.add('hidden');
+                });
+                const targetView = document.getElementById(`subview-abierto-${subViewId}`);
+                if (targetView) {
+                    targetView.classList.remove('hidden');
+                }
+
+                opensourceNav.querySelectorAll('.os-subnav-link').forEach(link => {
+                    link.classList.remove('active', 'bg-brand-primary/10', 'text-brand-primary');
+                    link.classList.add('text-brand-text/70', 'hover:bg-brand-primary/10');
+                });
+                const activeLink = opensourceNav.querySelector(`[data-subview="${subViewId}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active', 'bg-brand-primary/10', 'text-brand-primary');
+                    activeLink.classList.remove('text-brand-text/70', 'hover:bg-brand-primary/10');
+                }
+            }
+            
+            function showAutoView(subViewId) {
+                autoViews.forEach(view => {
+                    view.classList.add('hidden');
+                });
+                const targetView = document.getElementById(`subview-auto-${subViewId}`);
+                if (targetView) {
+                    targetView.classList.remove('hidden');
+                }
+
+                autoNav.querySelectorAll('.auto-subnav-link').forEach(link => {
+                    link.classList.remove('active', 'bg-brand-accent', 'text-white', 'shadow-md');
+                    link.classList.add('bg-brand-card', 'text-brand-accent', 'hover:bg-brand-accent/10', 'shadow-sm', 'border', 'border-brand-accent/30');
+                });
+                const activeLink = autoNav.querySelector(`[data-subview="${subViewId}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active', 'bg-brand-accent', 'text-white', 'shadow-md');
+                    activeLink.classList.remove('bg-brand-card', 'text-brand-accent', 'hover:bg-brand-accent/10', 'shadow-sm', 'border', 'border-brand-accent/30');
+                }
+            }
+            
+            function openModal(title, type) {
+                modalTitle.textContent = title;
+                let contentHTML = '';
+                
+                switch(type) {
+                    case 'pixel-vector':
+                        contentHTML = `
+                            <p>Esta es la base. Pasa el cursor sobre cada círculo para ver una simulación de zoom.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center mt-6">
+                                <div class="border border-brand-primary/20 p-4 rounded-lg">
+                                    <h4 class="text-xl font-bold text-brand-secondary">RASTER (Píxeles)</h4>
+                                    <div class="flex justify-center items-center my-4 h-32">
+                                        <div class="zoom-container">
+                                            <div class="w-24 h-24 rounded-full bg-brand-accent"></div>
+                                            <div class="zoom-magnifier pixel-magnifier">
+                                                <div class="pixel-magnifier-grid">
+                                                    <div class="bg-white"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-white"></div>
+                                                    <div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div>
+                                                    <div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div>
+                                                    <div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div>
+                                                    <div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div>
+                                                    <div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div>
+                                                    <div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div>
+                                                    <div class="bg-white"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-brand-accent"></div><div class="bg-white"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p><strong>Al ampliar:</strong> Pierde calidad (se "pixela").</p>
+                                    <p><strong>Ideal para:</strong> Fotos, pintura digital.</p>
+                                </div>
+                                <div class="border border-brand-primary/20 p-4 rounded-lg">
+                                    <h4 class="text-xl font-bold text-brand-secondary">VECTOR (Trazos)</h4>
+                                    <div class="flex justify-center items-center my-4 h-32">
+                                        <div class="zoom-container">
+                                            <div class="w-24 h-24 rounded-full bg-brand-primary"></div>
+                                            <div class="zoom-magnifier vector-magnifier overflow-hidden">
+                                                <div class="vector-magnifier-circle"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p><strong>Al ampliar:</strong> Calidad infinita. Siempre perfecto.</p>
+                                    <p><strong>Ideal para:</strong> Logos, iconos, tipografía.</p>
+                                </div>
+                            </div>
+                        `;
+                        break;
+                    case 'color':
+                        contentHTML = `
+                            <p>El color no se comporta igual en pantalla (luz) que en papel (tinta).</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-center">
+                                <div class="border border-brand-primary/20 p-4 rounded-lg">
+                                    <h4 class="text-xl font-bold text-brand-secondary">RGB (Luz Aditiva)</h4>
+                                    <div class="flex justify-center gap-2 my-4">
+                                        <div class="w-16 h-16 rounded-full bg-red-500"></div>
+                                        <div class="w-16 h-16 rounded-full bg-green-500"></div>
+                                        <div class="w-16 h-16 rounded-full bg-blue-500"></div>
+                                    </div>
+                                    <p><strong>Qué es:</strong> Red (Rojo), Green (Verde), Blue (Azul).</p>
+                                    <p><strong>Cómo funciona:</strong> Suma de luz. Todos juntos dan blanco.</p>
+                                    <p><strong>Uso:</strong> Pantallas (web, apps, redes sociales).</p>
+                                </div>
+                                <div class="border border-brand-primary/20 p-4 rounded-lg">
+                                    <h4 class="text-xl font-bold text-brand-secondary">CMYK (Tinta Sustractiva)</h4>
+                                    <div class="flex flex-wrap justify-center gap-2 my-4">
+                                        <div class="w-16 h-16 rounded-full bg-cyan-400"></div>
+                                        <div classs="w-16 h-16 rounded-full bg-magenta-500"></div>
+                                        <div class="w-16 h-16 rounded-full bg-yellow-300"></div>
+                                        <div class="w-16 h-16 rounded-full bg-black"></div>
+                                    </div>
+                                    <p><strong>Qué es:</strong> Cyan, Magenta, Yellow (Amarillo), Key (Negro).</p>
+                                    <p><strong>Cómo funciona:</strong> Resta de luz (tinta). Todos juntos dan negro.</p>
+                                    <p><strong>Uso:</strong> Impresión (tarjetas, carteles, flyers).</p>
+                                </div>
+                            </div>
+                        `;
+                        break;
+                    case 'hardware':
+                        contentHTML = `
+                            <p>Puedes dibujar con un mouse, pero una tableta gráfica es un cambio radical. La herramienta principal es la <strong>sensibilidad a la presión</strong>.</p>
+                            <div class="bg-brand-bg/50 border border-brand-secondary/20 p-4 rounded-lg">
+                                <h4 class="text-xl font-bold text-brand-secondary">Sensibilidad a la Presión</h4>
+                                <p class="my-2">Es la capacidad de la tableta para detectar cuánta fuerza aplicas con el lápiz digital.</p>
+                                <p><strong>Si presionas suave:</strong> El trazo en Photoshop/Krita es fino y claro (poca opacidad).</p>
+                                <p><strong>Si presionas fuerte:</strong> El trazo es grueso y oscuro (100% opacidad).</p>
+                                <p class="mt-2 font-bold text-brand-primary">Esto te permite dibujar y pintar de forma natural, simulando un lápiz o pincel real sobre papel.</p>
+                            </div>
+                        `;
+                        break;
+                    case 'composicion':
+                        contentHTML = `
+                            <p>La composición es el "orden" de los elementos en tu lienzo para que se vea bien. La regla más famosa es la <strong>Regla de los Tercios</strong>.</p>
+                            <p>Imagina que divides tu lienzo en 9 cuadros iguales, como un juego de "gato" (#).</p>
+                            <div class="w-full h-64 bg-brand-bg/50 border-4 border-brand-secondary/50 rounded-lg my-4 relative grid grid-cols-3 grid-rows-3">
+                                <div class="absolute inset-0 grid grid-cols-3 grid-rows-3">
+                                    <div class="border-r border-b border-brand-secondary/30"></div>
+                                    <div class="border-r border-b border-brand-secondary/30"></div>
+                                    <div class="border-b border-brand-secondary/30"></div>
+                                    <div class="border-r border-b border-brand-secondary/30"></div>
+                                    <div class="border-r border-b border-brand-secondary/30"></div>
+                                    <div class="border-b border-brand-secondary/30"></div>
+                                    <div class="border-r border-brand-secondary/30"></div>
+                                    <div class="border-r border-brand-secondary/30"></div>
+                                    <div></div>
+                                </div>
+                                <div class="absolute w-8 h-8 rounded-full bg-brand-accent/80 top-1/3 left-1/3 -translate-x-1/2 -translate-y-1/2"></div>
+                                <div class="absolute w-8 h-8 rounded-full bg-brand-accent/80 top-1/3 left-2/3 -translate-x-1/2 -translate-y-1/2"></div>
+                                <div class="absolute w-8 h-8 rounded-full bg-brand-accent/80 top-2/3 left-1/3 -translate-x-1/2 -translate-y-1/2"></div>
+                                <div class="absolute w-8 h-8 rounded-full bg-brand-accent/80 top-2/3 left-2/3 -translate-x-1/2 -translate-y-1/2"></div>
+                            </div>
+                            <p class="font-bold text-brand-primary">La teoría dice que si colocas tus puntos de interés (ej. los ojos de un personaje, el sol en un paisaje) en una de las 4 intersecciones (los puntos rojos), la imagen se sentirá más balanceada y profesional que si pones todo justo en el centro.</p>
+                        `;
+                        break;
+                }
+                
+                modalContent.innerHTML = contentHTML;
+                modal.classList.remove('hidden');
+            }
+            
+            function closeModal() {
+                modal.classList.add('hidden');
+                modalTitle.textContent = '';
+                modalContent.innerHTML = '';
+            }
+            
+            headerHome.addEventListener('click', (e) => {
+                e.preventDefault();
+                showView('inicio');
+            });
+            
+            mainNav.addEventListener('click', (e) => {
+                e.preventDefault();
+                const link = e.target.closest('.nav-link');
+                if (link && link.dataset.view) {
+                    showView(link.dataset.view);
+                }
+            });
+
+            if (platformNav) {
+                platformNav.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const link = e.target.closest('.subnav-link');
+                    if (link && link.dataset.subview) {
+                        showSubView(link.dataset.subview);
+                    }
+                });
+            }
+            
+            if (opensourceNav) {
+                opensourceNav.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const link = e.target.closest('.os-subnav-link');
+                    if (link && link.dataset.subview) {
+                        showOpenSourceView(link.dataset.subview);
+                    }
+                });
+            }
+            
+            if (autoNav) {
+                autoNav.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const link = e.target.closest('.auto-subnav-link');
+                    if (link && link.dataset.subview) {
+                        showAutoView(link.dataset.subview);
+                    }
+                });
+            }
+            
+            fundamentoBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const title = btn.dataset.modalTitle;
+                    const type = btn.dataset.modalType;
+                    openModal(title, type);
+                });
+            });
+            
+            modalOverlay.addEventListener('click', closeModal);
+            modalClose.addEventListener('click', closeModal);
+
+            showView('inicio');
+            showSubView('adobe');
+            showOpenSourceView('krita');
+            showAutoView('adobe'); 
+        });
+    </script>
+</body>
+</html>
