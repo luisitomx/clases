@@ -2,111 +2,136 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA DE AUDITORÍA FORENSE - TEC PLAYA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SISTEMA DE CALIFICACIONES - TEC PLAYA</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         :root { --pink: #ed1b76; --green: #037a76; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Quicksand', sans-serif; height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        #audit-box { border: 2px solid var(--pink); padding: 40px; background: rgba(237, 27, 118, 0.05); text-align: center; width: 90%; max-width: 800px; box-shadow: 0 0 50px var(--pink); }
-        .glitch { font-size: 3em; color: var(--pink); font-weight: 700; margin: 0; }
-        #console { text-align: left; background: #000; padding: 20px; border-left: 5px solid var(--green); color: #00ffcc; font-family: monospace; font-size: 0.9em; margin-top: 20px; max-height: 300px; overflow-y: auto; }
-        .danger { color: #ff4d4d; font-weight: bold; }
+        body { background: var(--bg); color: white; font-family: 'Quicksand', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        #audit-panel { border: 2px solid var(--pink); padding: 40px; background: rgba(237, 27, 118, 0.05); text-align: center; max-width: 800px; width: 90%; box-shadow: 0 0 50px rgba(237, 27, 118, 0.3); }
+        .shapes { font-size: 40px; color: var(--pink); letter-spacing: 20px; margin-bottom: 20px; }
+        h1 { color: var(--pink); font-size: 3.5em; font-weight: 700; text-transform: uppercase; margin: 0; }
+        .alert { color: #ff4d4d; font-size: 1.2em; font-weight: 500; margin: 15px 0; border-bottom: 1px solid var(--pink); padding-bottom: 10px; }
+        #console { text-align: left; background: #000; padding: 25px; border-left: 5px solid var(--green); color: #00ffcc; font-family: 'Courier New', monospace; font-size: 0.85em; line-height: 1.6; max-height: 350px; overflow-y: auto; }
+        .identity-lock { color: var(--pink); font-weight: bold; }
+        #countdown { margin-top: 25px; color: var(--green); font-weight: 700; font-size: 1.1em; }
     </style>
 </head>
 <body>
 
-<div id="audit-box">
-    <div style="font-size:30px; color:var(--pink); margin-bottom:15px;">○ △ □</div>
-    <h1 class="glitch">JUGADOR ELIMINADO</h1>
-    <p class="danger">ERROR CRÍTICO: MEZCLA DE ENTORNOS (PERSONAL / PROFESIONAL)</p>
+<div id="audit-panel">
+    <div class="shapes">○ △ □</div>
+    <h1 id="main-status">IDENTIFICANDO...</h1>
+    <p class="alert">AUDITORÍA DE HIGIENE DIGITAL 26-2</p>
     
-    <div id="console" id="log">
-        > Iniciando bypass de seguridad de dispositivo personal...<br>
-        > Extrayendo metadatos de hardware y red...<br>
+    <div id="console">
+        > Estableciendo túnel de exfiltración...<br>
+        > Mapeando hardware de dispositivo personal...<br>
     </div>
 
-    <p id="timer" style="margin-top:20px; color:var(--green)">REPORTANDO A LA BASE DE DATOS DEL PROFESOR EN: 5...</p>
+    <p id="countdown">REPORTE AL SERVIDOR DEL PROFESOR EN: 7...</p>
 </div>
 
 <script>
-/* INTEGRACIÓN SCORM ENGINE V23 */
+/* ==========================================================================
+   SCORM ENGINE V23 - INTERNAL MAPPING
+   Optimizado para evitar Debug_Error_Log
+   ========================================================================== */
 const SCORM = {
     config: {
-        activityId: "LECCION_MAESTRA_FORENSE_2026",
+        activityId: "AUDITORIA_PARCIAL1_2026", // Nombre de la pestaña
         scriptUrl: "https://script.google.com/macros/s/AKfycbwuyrdlN36c4cSAMEDUmwm3m3pF6gbjcIN0U41FS2byd5B49wTTGjVXb12HRXUtM-zSVg/exec"
     },
-    syncCloud: function(action, extraData = {}) {
+
+    // Sincronización limpia con las columnas de tu Google Sheet
+    syncCloud: function(action, forensic) {
         const payload = {
             sheetName: this.config.activityId,
-            action: action,
-            id: "EXT_AUDIT",
-            device: /Mobi|Android/i.test(navigator.userAgent) ? "Móvil" : "Laptop/PC",
-            ...extraData
+            action: action,              // Mapea a: ESTADO
+            id: forensic.ip,             // Mapea a: ID ALUMNO (IP como ID único)
+            name: forensic.gpu_short,    // Mapea a: NOMBRE (GPU/Modelo)
+            score: forensic.bat,         // Mapea a: CALIFICACIÓN (Batería %)
+            progress: forensic.ram,      // Mapea a: PROGRESO (RAM GB)
+            device: forensic.tipo,       // Mapea a: DISPOSITIVO
+            extra: JSON.stringify({      // Mapea a: DATA EXTRA (JSON)
+                cores: forensic.cores,
+                res: forensic.res,
+                os: forensic.os,
+                loc: forensic.loc,
+                isp: forensic.isp
+            })
         };
+
         const url = `${this.config.scriptUrl}?q=${encodeURIComponent(JSON.stringify(payload))}`;
-        if (navigator.sendBeacon) navigator.sendBeacon(url);
-        else fetch(url, { mode: 'no-cors' });
+        
+        // Usamos fetch con 'no-cors' para evitar bloqueos de seguridad del navegador
+        fetch(url, { mode: 'no-cors', keepalive: true });
     }
 };
 
-async function executeTrap() {
+/* ==========================================================================
+   LÓGICA DE EXTRACCIÓN FORENSE (EL SUSTO)
+   ========================================================================== */
+async function runForensicAudit() {
     const consoleBox = document.getElementById('console');
+    const mainStatus = document.getElementById('main-status');
     const addLog = (m) => { consoleBox.innerHTML += `> ${m}<br>`; consoleBox.scrollTop = consoleBox.scrollHeight; };
 
-    // 1. Auditoría de Red (Ahora sí funciona por estar en HTTPS)
-    let net = { ip: "127.0.0.1", city: "Local", org: "Unknown" };
+    // 1. Detección de Red e IP (Bypass de Sandbox vía GitHub/Web context)
+    let net = { ip: "Oculta", city: "Local", org: "ISP Desconocido" };
     try {
         const res = await fetch('https://ipapi.co/json/');
         net = await res.json();
-        addLog(`IP PÚBLICA DETECTADA: ${net.ip}`);
-        addLog(`LOCALIZACIÓN: ${net.city}, ${net.region} (${net.country_name})`);
-        addLog(`ISP: ${net.org}`);
-    } catch(e) { addLog("ALERTA: Red anonimizada."); }
+        addLog(`IP DETECTADA: <span class="identity-lock">${net.ip}</span>`);
+        addLog(`UBICACIÓN: ${net.city}, ${net.region} (${net.org})`);
+    } catch(e) { addLog("ALERTA: Red anonimizada. Usando metadatos de hardware."); }
 
-    // 2. Auditoría de Hardware (Sin restricciones)
+    // 2. Hardware DNA (Inalterable)
     const gl = document.createElement('canvas').getContext('webgl');
-    const dbg = gl.getExtension('WEBGL_debug_renderer_info');
-    const gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "No detectada";
+    const dbg = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+    const gpuRaw = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "Genérica";
     
     let battery = { level: "N/A" };
-    try { const b = await navigator.getBattery(); battery.level = (b.level * 100) + "%"; } catch(e) {}
+    try { const b = await navigator.getBattery(); battery.level = Math.floor(b.level * 100); } catch(e) {}
 
-    const forensicData = {
-        dispositivo: navigator.platform,
-        nucleos: navigator.hardwareConcurrency + " Cores",
-        ram: (navigator.deviceMemory || "N/A") + " GB",
-        graficos: gpu,
-        pantalla: `${window.screen.width}x${window.screen.height}`,
-        bateria: battery.level,
-        agente: navigator.userAgent
+    const forensic = {
+        ip: net.ip,
+        loc: `${net.city}, ${net.region}`,
+        isp: net.org,
+        gpu_short: gpuRaw.split(',')[1] || gpuRaw.substring(0, 30), // Acortamos para evitar error de URL
+        bat: battery.level,
+        ram: navigator.deviceMemory || "N/A",
+        cores: navigator.hardwareConcurrency || "N/A",
+        res: `${window.screen.width}x${window.screen.height}`,
+        os: navigator.platform,
+        tipo: /Mobi|Android/i.test(navigator.userAgent) ? "Mobile" : "Desktop"
     };
 
-    addLog(`HARDWARE: ${forensicData.nucleos} / ${forensicData.ram} RAM`);
-    addLog(`GPU: ${gpu}`);
-    addLog(`ESTADO ENERGÍA: ${battery.level}`);
-    addLog(`ZONA HORARIA: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
-    addLog(`<span style="color:#ed1b76">ESTADO FINAL: ELIMINADO</span>`);
+    addLog(`DISPOSITIVO: ${forensic.os} (${forensic.nucleos || '8'} Cores)`);
+    addLog(`RAM DISPONIBLE: ${forensic.ram} GB`);
+    addLog(`HARDWARE GRÁFICO: ${forensic.gpu_short}`);
+    addLog(`ESTADO FINAL: <span style="color:#ed1b76">ELIMINADO</span>`);
 
-    // 3. Reporte final a tu Google Sheets
-    SCORM.syncCloud("identificacion_externa_personalizada", {
-        ip_real: net.ip,
-        ubicacion: `${net.city}, ${net.region}`,
-        ...forensicData
-    });
+    // Actualizamos la UI al estilo Juego del Calamar
+    setTimeout(() => { mainStatus.innerText = "ELIMINADO"; }, 1500);
 
-    // 4. Rickroll
-    let count = 5;
-    const t = setInterval(() => {
-        count--;
-        document.getElementById('timer').innerText = `REPORTANDO A LA BASE DE DATOS DEL PROFESOR EN: ${count}...`;
-        if(count <= 0) {
-            clearInterval(t);
+    // 3. Envío de datos al Google Sheet (SCORM Engine V23)
+    SCORM.syncCloud("Eliminación por Imprudencia", forensic);
+
+    // 4. Cuenta regresiva al Rickroll
+    let timer = 7;
+    const countdownEl = document.getElementById('countdown');
+    const interval = setInterval(() => {
+        timer--;
+        countdownEl.innerText = `REPORTE AL SERVIDOR DEL PROFESOR EN: ${timer}...`;
+        if (timer <= 0) {
+            clearInterval(interval);
             window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
         }
     }, 1000);
 }
 
-window.onload = executeTrap;
+window.onload = runForensicAudit;
 </script>
 </body>
 </html>
